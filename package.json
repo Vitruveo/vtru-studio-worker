@@ -1,0 +1,69 @@
+{
+    "name": "vtru-studio-worker",
+    "version": "1.0.1",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "jest --detectOpenHandles --coverage",
+        "start": "node index.js",
+        "dev": "nodemon src/index.ts",
+        "lint": "eslint --fix src/**/*.ts",
+        "prepare": "husky install",
+        "postlint": "tsc --noEmit -p tsconfig.json",
+        "format": "prettier --write src/**/*.ts package.json",
+        "build": "tsc"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Vitruveo/vtru-studio-worker.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/Vitruveo/vtru-studio-worker/issues"
+    },
+    "homepage": "https://github.com/Vitruveo/vtru-studio-worker#readme",
+    "devDependencies": {
+        "@types/amqplib": "^0.10.4",
+        "@types/debug": "^4.1.12",
+        "@types/jest": "^29.5.10",
+        "@types/node": "^20.10.0",
+        "@typescript-eslint/eslint-plugin": "^6.13.1",
+        "@typescript-eslint/parser": "^6.13.1",
+        "eslint": "^8.54.0",
+        "eslint-config-airbnb-base": "^15.0.0",
+        "eslint-config-prettier": "^9.0.0",
+        "eslint-plugin-import": "^2.29.0",
+        "husky": "^8.0.3",
+        "jest": "^29.7.0",
+        "nodemon": "^3.0.1",
+        "prettier": "^3.1.0",
+        "ts-jest": "^29.1.1",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.3.2"
+    },
+    "dependencies": {
+        "@aws-sdk/client-cloudwatch-logs": "^3.461.0",
+        "@sentry/node": "^7.83.0",
+        "amqplib": "^0.10.3",
+        "axios": "^1.6.2",
+        "dayjs": "^1.11.10",
+        "debug": "^4.3.4",
+        "dotenv": "^16.3.1",
+        "nanoid": "^3.3.4"
+    },
+    "nodemonConfig": {
+        "watch": [
+            "src/"
+        ],
+        "ignore": [
+            ".git",
+            "node_modules"
+        ],
+        "execMap": {
+            "ts": "node --require ts-node/register"
+        },
+        "env": {}
+    }
+}

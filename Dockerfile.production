@@ -1,0 +1,14 @@
+FROM node:16
+
+ENV NODE_ENV=production
+
+WORKDIR /app
+COPY package*.json /app/
+
+RUN npm install
+
+COPY build ./
+COPY entrypoint.sh ./
+
+ENTRYPOINT [ "/app/entrypoint.sh" ]
+CMD [ "wait" ]

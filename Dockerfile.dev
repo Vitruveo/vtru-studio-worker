@@ -1,0 +1,8 @@
+FROM node:16
+
+ENV NODE_ENV=dev
+WORKDIR /app
+VOLUME /app
+
+ENTRYPOINT [ "/app/entrypoint.sh" ]
+CMD [ "wait" ]

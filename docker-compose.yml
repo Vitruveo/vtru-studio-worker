@@ -1,0 +1,31 @@
+version: '3.6'
+
+# api: 5001
+# rabbitmq: 5672, admin: 5673
+# mongo: 5017
+# redis: 5379
+
+services:
+  worker:
+    environment:
+      - NODE_ENV=dev
+      - PORT=3000
+      - RABBITMQ_URL=amqp://admin:password@rabbitmq:5672
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./:/app
+    restart: always
+    networks:
+      - vitruveo
+
+networks:
+  vitruveo:
+    external: true

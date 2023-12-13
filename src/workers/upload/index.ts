@@ -5,16 +5,16 @@ import {
     PutLogEventsCommand,
 } from '@aws-sdk/client-cloudwatch-logs';
 import {
-    RABBITMQ_EXCHANGE_MAIL,
+    RABBITMQ_EXCHANGE_CREATORS,
     AWS_DEFAULT_REGION,
     NODE_ENV,
 } from '../../constants';
 import { getChannel } from '../../services/rabbitmq';
 import { captureException } from '../../services/sentry';
-import { MailEnvelope } from './types';
-import { createMailProvider } from './factory';
+import { CreatorsAssetsEnvelope } from './types';
+import { createUploadProvider } from './factory';
 
-const logger = debug('worker:mail');
+const logger = debug('worker:creators.upload.assets');
 const uniqueId = nanoid();
 
 const cloudWatchLogsClient = new CloudWatchLogsClient({
@@ -22,7 +22,7 @@ const cloudWatchLogsClient = new CloudWatchLogsClient({
 });
 
 interface LogEventParams {
-    envelope: MailEnvelope;
+    envelope: CreatorsAssetsEnvelope;
     result: string;
     error?: Error;
 }
@@ -32,21 +32,51 @@ const logEvent = ({ envelope, result, error }: LogEventParams) => ({
     logStreamName: 'mail',
     logEvents: [
         {
-            message: `To: ${envelope.to}, Subject: ${
-                envelope.subject
-            }, Result: ${result}${error ? `, Error: ${error}` : ''}`,
+            message: `Key: ${envelope.key}, Result: ${result}${
+                error ? `, Error: ${error}` : ''
+            }`,
             timestamp: Date.now(),
         },
     ],
 });
 
-export const sendMail = async (envelope: MailEnvelope): Promise<boolean> => {
+export const sendToExchangeCreators = async (
+    message: string,
+    routingKey = 'presignedURL'
+) => {
     try {
-        // send mail via generic interface (sendgrid, mailgun, etc)
-        const mailProvider = createMailProvider();
-        await mailProvider.sendMail(envelope);
+        const channel = await getChannel();
+        channel?.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
+            durable: true,
+        });
 
-        // log mail sent
+        if (channel) {
+            channel.publish(
+                RABBITMQ_EXCHANGE_CREATORS,
+                routingKey,
+                Buffer.from(message)
+            );
+        }
+    } catch (error) {
+        logger('Error sending to queue: %O', error);
+        captureException(error, { tags: { scope: 'sendToQueue' } });
+    }
+};
+
+export const generatePresignedURL = async (
+    envelope: CreatorsAssetsEnvelope
+): Promise<boolean> => {
+    try {
+        const { creatorId } = envelope;
+
+        const uploadProvider = createUploadProvider();
+        const presignedURL = await uploadProvider.upload(envelope);
+
+        await sendToExchangeCreators(
+            JSON.stringify({ presignedURL, creatorId })
+        );
+
+        // log upload sent
         const command = new PutLogEventsCommand(
             logEvent({
                 envelope,
@@ -55,17 +85,17 @@ export const sendMail = async (envelope: MailEnvelope): Promise<boolean> => {
         );
         cloudWatchLogsClient.send(command);
         return true;
-    } catch (mailError) {
+    } catch (presignedError) {
         // avoid to duplicate error in sentry
-        captureException(mailError);
-        logger('Failed to send mail: %O', mailError);
+        logger('Failed to presigned: %O', presignedError);
+        captureException(presignedError);
         try {
-            // log mail failed
+            // log presigned failed
             const command = new PutLogEventsCommand(
                 logEvent({
                     envelope,
                     result: 'failed',
-                    error: mailError as Error,
+                    error: presignedError as Error,
                 })
             );
             cloudWatchLogsClient.send(command);
@@ -78,13 +108,13 @@ export const sendMail = async (envelope: MailEnvelope): Promise<boolean> => {
 
 export const start = async () => {
     const channel = await getChannel();
-    const logQueue = `${RABBITMQ_EXCHANGE_MAIL}.toSend.${uniqueId}`;
+    const logQueue = `${RABBITMQ_EXCHANGE_CREATORS}.assets.${uniqueId}`;
 
-    channel?.assertExchange(RABBITMQ_EXCHANGE_MAIL, 'topic', {
+    channel?.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
         durable: true,
     });
     channel?.assertQueue(logQueue, { durable: false });
-    channel?.bindQueue(logQueue, RABBITMQ_EXCHANGE_MAIL, 'toSend');
+    channel?.bindQueue(logQueue, RABBITMQ_EXCHANGE_CREATORS, 'assets');
 
     channel?.consume(logQueue, async (message) => {
         if (!message) return;
@@ -93,8 +123,8 @@ export const start = async () => {
             // parse envelope
             const parsedMessage = JSON.parse(
                 message.content.toString().trim()
-            ) as MailEnvelope;
-            await sendMail(parsedMessage);
+            ) as CreatorsAssetsEnvelope;
+            await generatePresignedURL(parsedMessage);
         } catch (parsingError) {
             captureException(parsingError);
         }

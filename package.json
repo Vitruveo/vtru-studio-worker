@@ -1,6 +1,6 @@
 {
     "name": "vtru-studio-worker",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "",
     "main": "index.js",
     "scripts": {
@@ -45,6 +45,8 @@
     },
     "dependencies": {
         "@aws-sdk/client-cloudwatch-logs": "^3.461.0",
+        "@aws-sdk/client-s3": "^3.472.0",
+        "@aws-sdk/s3-request-presigner": "^3.472.0",
         "@sentry/node": "^7.83.0",
         "amqplib": "^0.10.3",
         "axios": "^1.6.2",

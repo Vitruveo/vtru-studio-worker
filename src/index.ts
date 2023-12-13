@@ -6,6 +6,7 @@ import timezone from 'dayjs/plugin/timezone';
 import { captureException } from './services/sentry';
 import { start as expressStart } from './workers/express';
 import { start as mailStart } from './workers/mail';
+import { start as uploadStart } from './workers/upload';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -18,6 +19,7 @@ const workers: Record<string, boolean> = {
     all: false,
     express: false,
     mail: false,
+    upload: false,
 };
 
 // sample argv: [ '/usr/bin/node', '/home/rodrigo/Projects/vitruveo-studio/core/dist/index.js', 'express', 'mail' ]
@@ -35,6 +37,7 @@ const start = async () => {
     logger('Worker starting');
     if (workers.all || workers.express) await expressStart();
     if (workers.all || workers.mail) await mailStart();
+    if (workers.all || workers.upload) await uploadStart();
     logger('Worker started');
 };
 

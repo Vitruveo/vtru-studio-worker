@@ -3,3 +3,4 @@ export * from './rabbitmq';
 export * from './aws';
 export * from './worker';
 export * from './mail';
+export * from './upload';

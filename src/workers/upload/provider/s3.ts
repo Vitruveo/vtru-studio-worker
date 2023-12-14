@@ -13,12 +13,12 @@ import {
 
 const logger = debug('workers:upload:s3');
 
-interface PresignedUrlParams {
+interface PreSignedUrlParams {
     key: string;
 }
 
 export class S3 implements UploadProvider {
-    createPresignedUrlWithClient({ key }: PresignedUrlParams) {
+    createPreSignedUrlWithClient({ key }: PreSignedUrlParams) {
         const client = new S3Client({
             credentials: {
                 accessKeyId: AWS_ACCESS_KEY_ID,
@@ -38,9 +38,11 @@ export class S3 implements UploadProvider {
     async upload(envelope: CreatorsAssetsEnvelope): Promise<string> {
         logger('Upload using s3: %O', envelope);
 
-        const clienUrl = await this.createPresignedUrlWithClient({
-            key: envelope.key,
-        });
-        return clienUrl;
+        return 'https://aws-s3-url';
+
+        // const clienUrl = await this.createPreSignedUrlWithClient({
+        //     key: envelope.key,
+        // });
+        // return clienUrl;
     }
 }

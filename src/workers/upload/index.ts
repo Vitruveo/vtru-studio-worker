@@ -42,7 +42,7 @@ const logEvent = ({ envelope, result, error }: LogEventParams) => ({
 
 export const sendToExchangeCreators = async (
     message: string,
-    routingKey = 'presignedURL'
+    routingKey = 'preSignedURL'
 ) => {
     try {
         const channel = await getChannel();
@@ -63,17 +63,17 @@ export const sendToExchangeCreators = async (
     }
 };
 
-export const generatePresignedURL = async (
+export const generatePreSignedURL = async (
     envelope: CreatorsAssetsEnvelope
 ): Promise<boolean> => {
     try {
         const { creatorId } = envelope;
 
         const uploadProvider = createUploadProvider();
-        const presignedURL = await uploadProvider.upload(envelope);
+        const preSignedURL = await uploadProvider.upload(envelope);
 
         await sendToExchangeCreators(
-            JSON.stringify({ presignedURL, creatorId })
+            JSON.stringify({ preSignedURL, creatorId })
         );
 
         // log upload sent
@@ -124,7 +124,7 @@ export const start = async () => {
             const parsedMessage = JSON.parse(
                 message.content.toString().trim()
             ) as CreatorsAssetsEnvelope;
-            await generatePresignedURL(parsedMessage);
+            await generatePreSignedURL(parsedMessage);
         } catch (parsingError) {
             captureException(parsingError);
         }

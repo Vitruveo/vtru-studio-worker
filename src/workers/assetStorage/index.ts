@@ -11,10 +11,10 @@ import {
 } from '../../constants';
 import { getChannel } from '../../services/rabbitmq';
 import { captureException } from '../../services/sentry';
-import { CreatorsAssetsEnvelope } from './types';
-import { createUploadProvider } from './factory';
+import { AssetEnvelope } from './types';
+import { createAssetStorageProvider } from './factory';
 
-const logger = debug('worker:creators.upload.assets');
+const logger = debug('worker:asset:storage');
 const uniqueId = nanoid();
 
 const cloudWatchLogsClient = new CloudWatchLogsClient({
@@ -22,7 +22,7 @@ const cloudWatchLogsClient = new CloudWatchLogsClient({
 });
 
 interface LogEventParams {
-    envelope: CreatorsAssetsEnvelope;
+    envelope: AssetEnvelope;
     result: string;
     error?: Error;
 }
@@ -63,20 +63,22 @@ export const sendToExchangeCreators = async (
     }
 };
 
-export const generatePreSignedURL = async (
-    envelope: CreatorsAssetsEnvelope
-): Promise<boolean> => {
+export const generatePreSignedURL = async ({
+    envelope,
+}: {
+    envelope: AssetEnvelope;
+}): Promise<boolean> => {
     try {
-        const { creatorId } = envelope;
+        const { creatorId, transactionId } = envelope;
 
-        const uploadProvider = createUploadProvider();
-        const preSignedURL = await uploadProvider.upload(envelope);
+        const assetStorageProvider = createAssetStorageProvider();
+        const preSignedURL =
+            await assetStorageProvider.createAssetStorage(envelope);
 
         await sendToExchangeCreators(
-            JSON.stringify({ preSignedURL, creatorId })
+            JSON.stringify({ preSignedURL, creatorId, transactionId })
         );
 
-        // log upload sent
         const command = new PutLogEventsCommand(
             logEvent({
                 envelope,
@@ -123,8 +125,8 @@ export const start = async () => {
             // parse envelope
             const parsedMessage = JSON.parse(
                 message.content.toString().trim()
-            ) as CreatorsAssetsEnvelope;
-            await generatePreSignedURL(parsedMessage);
+            ) as AssetEnvelope;
+            await generatePreSignedURL({ envelope: parsedMessage });
         } catch (parsingError) {
             captureException(parsingError);
         }

@@ -5,3 +5,5 @@ export const RABBITMQ_EXCHANGE_EXPRESS =
     process.env.RABBITMQ_EXCHANGE_EXPRESS_LOG || 'express';
 export const RABBITMQ_EXCHANGE_MAIL =
     process.env.RABBITMQ_EXCHANGE_MAIL || 'mail';
+export const RABBITMQ_EXCHANGE_CREATORS =
+    process.env.RABBITMQ_EXCHANGE_CREATORS || 'creators';

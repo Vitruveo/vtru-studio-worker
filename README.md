@@ -2,25 +2,22 @@
 
 Template para projetos em typescript
 
+## Development
 
-## Desenvolvimento
+### Prerequisites
 
-### Pre-requisitos
+To use this project, you will need the following software installed:
 
-Para utilizar este projeto você precisará ter os seguintes softwares instalados:
+- Docker 19.x or above;
+- Nodejs 16.x (specific);
+- VSCode or Neovim;
 
-- Docker 19.x ou superior;
-- Nodejs versão 16.x (especifica);
-- VSCode ou Neovim;
+### Environment
 
-### Ambiente
-
-Para inicializar o ambiente de desenvolvimento, utilize:
+To initialize the development environment, use:
 
 ```sh
 npm install
 docker network create vitruveo
 docker-compose up
 ```
-
-

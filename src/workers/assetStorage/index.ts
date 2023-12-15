@@ -35,7 +35,7 @@ const logEvent = ({ envelope, result, error }: LogEventParams) => ({
     logStreamName: 'mail',
     logEvents: [
         {
-            message: `Key: ${envelope.key}, Result: ${result}${
+            message: `Key: ${envelope.path}, Result: ${result}${
                 error ? `, Error: ${error}` : ''
             }`,
             timestamp: Date.now(),

@@ -1,9 +1,9 @@
 export interface AssetEnvelope {
-    key: string;
+    path: string;
     creatorId: string;
     transactionId: string;
 }
 
 export interface AssetStorageProvider {
-    createAssetStorage(params: AssetEnvelope): Promise<string>;
+    createUrlForUpload(params: AssetEnvelope): Promise<string>;
 }

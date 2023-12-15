@@ -4,3 +4,4 @@ export * from './aws';
 export * from './worker';
 export * from './mail';
 export * from './upload';
+export * from './logger';

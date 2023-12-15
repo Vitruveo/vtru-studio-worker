@@ -1,103 +1,72 @@
-import debug from 'debug';
 import { nanoid } from 'nanoid';
-import {
-    CloudWatchLogsClient,
-    PutLogEventsCommand,
-} from '@aws-sdk/client-cloudwatch-logs';
-import {
-    RABBITMQ_EXCHANGE_MAIL,
-    AWS_DEFAULT_REGION,
-    NODE_ENV,
-} from '../../constants';
-import { getChannel } from '../../services/rabbitmq';
-import { captureException } from '../../services/sentry';
-import { MailEnvelope } from './types';
+import { RABBITMQ_EXCHANGE_MAIL } from '../../constants';
+import { sentry, queue, logger as remoteLogger } from '../../services';
+import type { MailEnvelope } from './types';
 import { createMailProvider } from './factory';
 
-const logger = debug('worker:mail');
 const uniqueId = nanoid();
 
-const cloudWatchLogsClient = new CloudWatchLogsClient({
-    region: AWS_DEFAULT_REGION,
-});
-
-interface LogEventParams {
+interface MessageParams {
     envelope: MailEnvelope;
     result: string;
     error?: Error;
 }
 
-const logEvent = ({ envelope, result, error }: LogEventParams) => ({
-    logGroupName: `vitruveo.studio.${NODE_ENV}`,
-    logStreamName: 'mail',
-    logEvents: [
-        {
-            message: `To: ${envelope.to}, Subject: ${
-                envelope.subject
-            }, Result: ${result}${error ? `, Error: ${error}` : ''}`,
-            timestamp: Date.now(),
-        },
-    ],
-});
+const message = ({ envelope, result, error }: MessageParams) =>
+    `To: ${envelope.to}, Subject: ${envelope.subject}, Result: ${result}${
+        error ? `, Error: ${error}` : ''
+    }`;
 
 export const sendMail = async (envelope: MailEnvelope): Promise<boolean> => {
+    const mailProvider = createMailProvider();
+    const loggerProvider = remoteLogger.createLogger();
+    await loggerProvider.prepare({ namespace: 'mail' });
     try {
-        // send mail via generic interface (sendgrid, mailgun, etc)
-        const mailProvider = createMailProvider();
         await mailProvider.sendMail(envelope);
-
-        // log mail sent
-        const command = new PutLogEventsCommand(
-            logEvent({
+        await loggerProvider.log({
+            message: message({
                 envelope,
                 result: 'success',
-            })
-        );
-        cloudWatchLogsClient.send(command);
+            }),
+            logLevel: 'info',
+        });
         return true;
     } catch (mailError) {
         // avoid to duplicate error in sentry
-        captureException(mailError);
-        logger('Failed to send mail: %O', mailError);
-        try {
-            // log mail failed
-            const command = new PutLogEventsCommand(
-                logEvent({
-                    envelope,
-                    result: 'failed',
-                    error: mailError as Error,
-                })
-            );
-            cloudWatchLogsClient.send(command);
-        } catch (cloudWatchError) {
-            // avoid to duplicate error in sentry
-        }
+        sentry.captureException(mailError);
+        await loggerProvider.log({
+            message: message({
+                envelope,
+                result: 'failed',
+                error: mailError as Error,
+            }),
+            logLevel: 'error',
+        });
     }
     return false;
 };
 
+// TODO: create dead letter for queue
 export const start = async () => {
-    const channel = await getChannel();
+    const channel = await queue.getChannel();
     const logQueue = `${RABBITMQ_EXCHANGE_MAIL}.toSend.${uniqueId}`;
-
     channel?.assertExchange(RABBITMQ_EXCHANGE_MAIL, 'topic', {
         durable: true,
     });
     channel?.assertQueue(logQueue, { durable: false });
     channel?.bindQueue(logQueue, RABBITMQ_EXCHANGE_MAIL, 'toSend');
-
-    channel?.consume(logQueue, async (message) => {
-        if (!message) return;
-
+    channel?.consume(logQueue, async (data) => {
+        if (!data) return;
         try {
             // parse envelope
             const parsedMessage = JSON.parse(
-                message.content.toString().trim()
+                data.content.toString().trim()
             ) as MailEnvelope;
             await sendMail(parsedMessage);
+            channel?.ack(data);
         } catch (parsingError) {
-            captureException(parsingError);
+            sentry.captureException(parsingError);
+            channel?.nack(data);
         }
-        channel?.ack(message);
     });
 };

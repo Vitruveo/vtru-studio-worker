@@ -17,16 +17,19 @@ import { createAssetStorageProvider } from './factory';
 const logger = debug('worker:asset:storage');
 const uniqueId = nanoid();
 
+// FIX: trocar para usar o services/logger
 const cloudWatchLogsClient = new CloudWatchLogsClient({
     region: AWS_DEFAULT_REGION,
 });
 
+// FIX: trocar para MessageParams
 interface LogEventParams {
     envelope: AssetEnvelope;
     result: string;
     error?: Error;
 }
 
+// FIX: trocar para message
 const logEvent = ({ envelope, result, error }: LogEventParams) => ({
     logGroupName: `vitruveo.studio.${NODE_ENV}`,
     logStreamName: 'mail',
@@ -40,6 +43,7 @@ const logEvent = ({ envelope, result, error }: LogEventParams) => ({
     ],
 });
 
+// FIX: mudar para NamedParameters
 export const sendToExchangeCreators = async (
     message: string,
     routingKey = 'preSignedURL'
@@ -63,6 +67,7 @@ export const sendToExchangeCreators = async (
     }
 };
 
+// FIX: Criar uma interface GeneratePreSignedURLParams
 export const generatePreSignedURL = async ({
     envelope,
 }: {
@@ -73,7 +78,7 @@ export const generatePreSignedURL = async ({
 
         const assetStorageProvider = createAssetStorageProvider();
         const preSignedURL =
-            await assetStorageProvider.createAssetStorage(envelope);
+            await assetStorageProvider.createUrlForUpload(envelope);
 
         await sendToExchangeCreators(
             JSON.stringify({ preSignedURL, creatorId, transactionId })
@@ -108,6 +113,7 @@ export const generatePreSignedURL = async ({
     return false;
 };
 
+// TODO: criar dead letter para queue
 export const start = async () => {
     const channel = await getChannel();
     const logQueue = `${RABBITMQ_EXCHANGE_CREATORS}.assets.${uniqueId}`;
@@ -117,7 +123,6 @@ export const start = async () => {
     });
     channel?.assertQueue(logQueue, { durable: false });
     channel?.bindQueue(logQueue, RABBITMQ_EXCHANGE_CREATORS, 'assets');
-
     channel?.consume(logQueue, async (message) => {
         if (!message) return;
 
@@ -127,9 +132,10 @@ export const start = async () => {
                 message.content.toString().trim()
             ) as AssetEnvelope;
             await generatePreSignedURL({ envelope: parsedMessage });
+            channel?.ack(message);
         } catch (parsingError) {
             captureException(parsingError);
         }
-        channel?.ack(message);
+        channel?.nack(message);
     });
 };

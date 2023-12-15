@@ -1,55 +1,34 @@
 import debug from 'debug';
 import { nanoid } from 'nanoid';
+import { RABBITMQ_EXCHANGE_CREATORS } from '../../constants';
+import { sentry, queue, logger as remoteLogger } from '../../services';
 import {
-    CloudWatchLogsClient,
-    PutLogEventsCommand,
-} from '@aws-sdk/client-cloudwatch-logs';
-import {
-    RABBITMQ_EXCHANGE_CREATORS,
-    AWS_DEFAULT_REGION,
-    NODE_ENV,
-} from '../../constants';
-import { getChannel } from '../../services/rabbitmq';
-import { captureException } from '../../services/sentry';
-import { AssetEnvelope } from './types';
+    AssetEnvelope,
+    GeneratePreSignedURLParams,
+    SendToExchangeCreatorsParams,
+} from './types';
 import { createAssetStorageProvider } from './factory';
 
 const logger = debug('worker:asset:storage');
 const uniqueId = nanoid();
 
-// FIX: trocar para usar o services/logger
-const cloudWatchLogsClient = new CloudWatchLogsClient({
-    region: AWS_DEFAULT_REGION,
-});
-
-// FIX: trocar para MessageParams
-interface LogEventParams {
+interface MessageParams {
     envelope: AssetEnvelope;
     result: string;
     error?: Error;
 }
 
-// FIX: trocar para message
-const logEvent = ({ envelope, result, error }: LogEventParams) => ({
-    logGroupName: `vitruveo.studio.${NODE_ENV}`,
-    logStreamName: 'mail',
-    logEvents: [
-        {
-            message: `Key: ${envelope.key}, Result: ${result}${
-                error ? `, Error: ${error}` : ''
-            }`,
-            timestamp: Date.now(),
-        },
-    ],
-});
+const message = ({ envelope, result, error }: MessageParams) =>
+    `Key: ${envelope.path}, Result: ${result}${
+        error ? `, Error: ${error}` : ''
+    }`;
 
-// FIX: mudar para NamedParameters
-export const sendToExchangeCreators = async (
-    message: string,
-    routingKey = 'preSignedURL'
-) => {
+export const sendToExchangeCreators = async ({
+    envelope,
+    routingKey = 'preSignedURL',
+}: SendToExchangeCreatorsParams) => {
     try {
-        const channel = await getChannel();
+        const channel = await queue.getChannel();
         channel?.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
             durable: true,
         });
@@ -58,21 +37,20 @@ export const sendToExchangeCreators = async (
             channel.publish(
                 RABBITMQ_EXCHANGE_CREATORS,
                 routingKey,
-                Buffer.from(message)
+                Buffer.from(envelope)
             );
         }
     } catch (error) {
         logger('Error sending to queue: %O', error);
-        captureException(error, { tags: { scope: 'sendToQueue' } });
+        sentry.captureException(error, { tags: { scope: 'sendToQueue' } });
     }
 };
 
-// FIX: Criar uma interface GeneratePreSignedURLParams
 export const generatePreSignedURL = async ({
     envelope,
-}: {
-    envelope: AssetEnvelope;
-}): Promise<boolean> => {
+}: GeneratePreSignedURLParams): Promise<boolean> => {
+    const loggerProvider = remoteLogger.createLogger();
+    await loggerProvider.prepare({ namespace: 'assetStorage' });
     try {
         const { creatorId, transactionId } = envelope;
 
@@ -80,42 +58,40 @@ export const generatePreSignedURL = async ({
         const preSignedURL =
             await assetStorageProvider.createUrlForUpload(envelope);
 
-        await sendToExchangeCreators(
-            JSON.stringify({ preSignedURL, creatorId, transactionId })
-        );
+        await sendToExchangeCreators({
+            envelope: JSON.stringify({
+                preSignedURL,
+                creatorId,
+                transactionId,
+            }),
+        });
 
-        const command = new PutLogEventsCommand(
-            logEvent({
+        await loggerProvider.log({
+            message: message({
                 envelope,
                 result: 'success',
-            })
-        );
-        cloudWatchLogsClient.send(command);
+            }),
+            logLevel: 'info',
+        });
         return true;
     } catch (presignedError) {
         // avoid to duplicate error in sentry
-        logger('Failed to presigned: %O', presignedError);
-        captureException(presignedError);
-        try {
-            // log presigned failed
-            const command = new PutLogEventsCommand(
-                logEvent({
-                    envelope,
-                    result: 'failed',
-                    error: presignedError as Error,
-                })
-            );
-            cloudWatchLogsClient.send(command);
-        } catch (cloudWatchError) {
-            // avoid to duplicate error in sentry
-        }
+        sentry.captureException(presignedError);
+        await loggerProvider.log({
+            message: message({
+                envelope,
+                result: 'failed',
+                error: presignedError as Error,
+            }),
+            logLevel: 'error',
+        });
     }
     return false;
 };
 
 // TODO: criar dead letter para queue
 export const start = async () => {
-    const channel = await getChannel();
+    const channel = await queue.getChannel();
     const logQueue = `${RABBITMQ_EXCHANGE_CREATORS}.assets.${uniqueId}`;
 
     channel?.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
@@ -123,19 +99,19 @@ export const start = async () => {
     });
     channel?.assertQueue(logQueue, { durable: false });
     channel?.bindQueue(logQueue, RABBITMQ_EXCHANGE_CREATORS, 'assets');
-    channel?.consume(logQueue, async (message) => {
-        if (!message) return;
+    channel?.consume(logQueue, async (data) => {
+        if (!data) return;
 
         try {
             // parse envelope
             const parsedMessage = JSON.parse(
-                message.content.toString().trim()
+                data.content.toString().trim()
             ) as AssetEnvelope;
             await generatePreSignedURL({ envelope: parsedMessage });
-            channel?.ack(message);
+            channel?.ack(data);
         } catch (parsingError) {
-            captureException(parsingError);
+            sentry.captureException(parsingError);
         }
-        channel?.nack(message);
+        channel?.nack(data);
     });
 };

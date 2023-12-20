@@ -1,6 +1,6 @@
 {
     "name": "vtru-studio-worker",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "description": "",
     "main": "index.js",
     "scripts": {
@@ -29,6 +29,7 @@
         "@types/debug": "^4.1.12",
         "@types/jest": "^29.5.10",
         "@types/node": "^20.10.0",
+        "@types/nodemailer": "^6.4.14",
         "@typescript-eslint/eslint-plugin": "^6.13.1",
         "@typescript-eslint/parser": "^6.13.1",
         "eslint": "^8.54.0",
@@ -52,7 +53,8 @@
         "dayjs": "^1.11.10",
         "debug": "^4.3.4",
         "dotenv": "^16.3.1",
-        "nanoid": "^3.3.4"
+        "nanoid": "^3.3.4",
+        "nodemailer": "^6.9.7"
     },
     "nodemonConfig": {
         "watch": [

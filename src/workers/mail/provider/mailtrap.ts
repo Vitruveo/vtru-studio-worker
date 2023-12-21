@@ -26,9 +26,7 @@ export class MailTrap implements MailProvider {
             from: MAIL_MAILTRAP_FROM,
             to: envelope.to,
             subject: envelope.subject,
-            text: `
-Code: ${envelope.text}
-`,
+            text: `Code: ${envelope.text}`,
         });
 
         return info.messageId;

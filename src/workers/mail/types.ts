@@ -3,6 +3,7 @@ export interface MailEnvelope {
     subject: string;
     text: string;
     html: string;
+    template: string;
 }
 
 export interface MailProvider {

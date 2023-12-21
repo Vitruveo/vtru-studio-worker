@@ -46,8 +46,9 @@ jobs:
           REPOSITORY: vitruveo.studio.worker
           UPDATE_TOKEN: ${{ secrets.UPDATE_TOKEN }}
           UPDATE_URL: ${{ secrets.UPDATE_URL }}
+          REPOSITORY_IMAGE: ${{ vars.REPOSITORY_IMAGE }}
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG.qa -f Dockerfile.production --network host .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG.qa
-          curl -X "POST" -H 'Content-Type: application/json' -d "{\"token\":\"$UPDATE_TOKEN\",\"image\":\"$REPOSITORY_IMAGE/$REPOSITORY:$IMAGE_TAG.qa\",\"service\":\"vitruveo-studio_api\"}" $UPDATE_URL
+          curl -X "POST" -H 'Content-Type: application/json' -d "{\"token\":\"$UPDATE_TOKEN\",\"image\":\"$REPOSITORY_IMAGE:$IMAGE_TAG.qa\",\"service\":\"vitruveo-studio_api\"}" $UPDATE_URL
 

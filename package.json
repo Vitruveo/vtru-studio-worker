@@ -1,6 +1,6 @@
 {
     "name": "vtru-studio-worker",
-    "version": "1.0.13",
+    "version": "1.0.14",
     "description": "",
     "main": "index.js",
     "scripts": {
@@ -48,6 +48,7 @@
         "@aws-sdk/client-cloudwatch-logs": "^3.461.0",
         "@aws-sdk/client-s3": "^3.472.0",
         "@aws-sdk/s3-request-presigner": "^3.472.0",
+        "@sendgrid/mail": "^8.1.0",
         "@sentry/node": "^7.83.0",
         "amqplib": "^0.10.3",
         "dayjs": "^1.11.10",

@@ -1,12 +1,25 @@
-import debug from 'debug';
+import sgMail, { MailDataRequired } from '@sendgrid/mail';
 import { MailProvider, MailEnvelope } from '../types';
-
-const logger = debug('workers:mail:sendgrid');
+import { MAIL_SENDGRID_API_KEY, MAIL_SENDGRID_FROM } from '../../../constants';
 
 export class SendGrid implements MailProvider {
+    constructor() {
+        sgMail.setApiKey(MAIL_SENDGRID_API_KEY);
+    }
+
     async sendMail(envelope: MailEnvelope): Promise<string> {
-        // Send mail using SendGrid
-        logger('Sending mail using SendGrid: %O', envelope);
-        throw new Error('Method not implemented.');
+        const msg: MailDataRequired = {
+            from: MAIL_SENDGRID_FROM,
+            to: envelope.to,
+            templateId: envelope.template,
+            dynamicTemplateData: {
+                code: envelope.text,
+                link: envelope.link,
+            },
+        };
+
+        const [response] = await sgMail.send(msg);
+
+        return response.statusCode.toString();
     }
 }

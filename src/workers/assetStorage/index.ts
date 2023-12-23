@@ -63,6 +63,7 @@ export const generatePreSignedURL = async ({
                 preSignedURL,
                 creatorId,
                 transactionId,
+                path: envelope.path,
             }),
         });
 
@@ -108,10 +109,9 @@ export const start = async () => {
                 data.content.toString().trim()
             ) as AssetEnvelope;
             await generatePreSignedURL({ envelope: parsedMessage });
-            channel?.ack(data);
         } catch (parsingError) {
             sentry.captureException(parsingError);
         }
-        channel?.nack(data);
+        channel?.ack(data);
     });
 };

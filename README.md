@@ -8,9 +8,9 @@ Template para projetos em typescript
 
 To use this project, you will need the following software installed:
 
-- Docker 19.x or above;
-- Nodejs 16.x (specific);
-- VSCode or Neovim;
+-   Docker 19.x or above;
+-   Nodejs 16.x (specific);
+-   VSCode or Neovim;
 
 ### Environment
 
@@ -21,3 +21,5 @@ npm install
 docker network create vitruveo
 docker-compose up
 ```
+
+### force push

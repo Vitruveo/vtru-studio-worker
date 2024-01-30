@@ -5,6 +5,7 @@ export interface SendToExchangeCreatorsParams {
 
 export interface AssetEnvelope {
     path: string;
+    origin: 'asset' | 'profile';
     creatorId: string;
     transactionId: string;
 }

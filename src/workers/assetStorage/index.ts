@@ -64,6 +64,7 @@ export const generatePreSignedURL = async ({
                 creatorId,
                 transactionId,
                 path: envelope.path,
+                origin: envelope.origin,
             }),
         });
 

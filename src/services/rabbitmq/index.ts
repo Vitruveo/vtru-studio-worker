@@ -7,21 +7,10 @@ const logger = debug('services:rabbitmq');
 
 const status: {
     connection: Connection | null;
+    isConnected: boolean;
 } = {
     connection: null,
-};
-
-export const getConnection = async () => {
-    try {
-        if (!status.connection) {
-            status.connection = await rabbitmq.connect(RABBITMQ_URL);
-        }
-    } catch (err) {
-        captureException(err, { tags: { scope: 'rabbitmq' } });
-        logger('Error connecting to rabbitmq: %O', err);
-        status.connection = null;
-    }
-    return status.connection;
+    isConnected: false,
 };
 
 export const disconnect = async () => {
@@ -32,9 +21,24 @@ export const disconnect = async () => {
     }
 };
 
+export const getConnection = async () => {
+    try {
+        if (!status.connection) {
+            status.connection = await rabbitmq.connect(RABBITMQ_URL);
+            status.isConnected = true;
+        }
+    } catch (err) {
+        status.isConnected = false;
+        status.connection = null;
+        captureException(err, { tags: { scope: 'rabbitmq' } });
+        logger('Error connecting to rabbitmq: %O', err);
+    }
+    return status;
+};
+
 export const getChannel = async () => {
     try {
-        const connection = await getConnection();
+        const { connection } = await getConnection();
         if (connection) {
             return connection.createChannel();
         }

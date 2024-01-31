@@ -1,12 +1,12 @@
 {
     "name": "vtru-studio-worker",
-    "version": "1.0.19",
+    "version": "1.0.20",
     "description": "",
     "main": "index.js",
     "scripts": {
         "test": "jest --detectOpenHandles --coverage",
         "start": "node index.js",
-        "dev": "nodemon src/index.ts",
+        "dev": "nodemon --exitcrash src/index.ts",
         "lint": "eslint --fix src/**/*.ts",
         "prepare": "husky install",
         "postlint": "tsc --noEmit -p tsconfig.json",

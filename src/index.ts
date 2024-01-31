@@ -3,6 +3,7 @@ import debug from 'debug';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { getConnection } from './services/rabbitmq';
 import { captureException } from './services/sentry';
 import { start as expressStart } from './workers/express';
 import { start as mailStart } from './workers/mail';
@@ -35,6 +36,19 @@ if (process.argv.length === 2) {
 
 const start = async () => {
     logger('Worker starting');
+
+    const rabbitmqStatus = await getConnection();
+    if (!rabbitmqStatus.isConnected || !rabbitmqStatus.connection) {
+        logger('RabbitMQ connection failed, retrying in 10 seconds...');
+        setTimeout(start, 10000);
+        return;
+    }
+
+    rabbitmqStatus.connection.on('close', () => {
+        logger('RabbitMQ connection closed, restarting in 10 seconds...');
+        setTimeout(start, 10000);
+    });
+
     if (workers.all || workers.express) await expressStart();
     if (workers.all || workers.mail) await mailStart();
     if (workers.all || workers.assetStorage) await assetStorageStart();

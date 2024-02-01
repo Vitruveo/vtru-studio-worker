@@ -55,8 +55,7 @@ export const generatePreSignedURL = async ({
         const { creatorId, transactionId } = envelope;
 
         const assetStorageProvider = createAssetStorageProvider();
-        const preSignedURL =
-            await assetStorageProvider.createUrlForUpload(envelope);
+        const preSignedURL = await assetStorageProvider.createUrl(envelope);
 
         await sendToExchangeCreators({
             envelope: JSON.stringify({
@@ -65,6 +64,7 @@ export const generatePreSignedURL = async ({
                 transactionId,
                 path: envelope.path,
                 origin: envelope.origin,
+                method: envelope.method,
             }),
         });
 

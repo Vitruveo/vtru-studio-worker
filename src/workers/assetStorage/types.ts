@@ -5,6 +5,7 @@ export interface SendToExchangeCreatorsParams {
 
 export interface AssetEnvelope {
     path: string;
+    method: 'PUT' | 'DELETE';
     origin: 'asset' | 'profile';
     creatorId: string;
     transactionId: string;
@@ -15,5 +16,5 @@ export interface GeneratePreSignedURLParams {
 }
 
 export interface AssetStorageProvider {
-    createUrlForUpload(params: AssetEnvelope): Promise<string>;
+    createUrl(params: AssetEnvelope): Promise<string>;
 }

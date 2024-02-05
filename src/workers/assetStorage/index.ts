@@ -109,7 +109,13 @@ export const start = async () => {
             const parsedMessage = JSON.parse(
                 data.content.toString().trim()
             ) as AssetEnvelope;
-            await generatePreSignedURL({ envelope: parsedMessage });
+
+            if (parsedMessage.method === 'DELETE') {
+                const assetStorageProvider = createAssetStorageProvider();
+                await assetStorageProvider.deleteFiles(parsedMessage);
+            } else {
+                await generatePreSignedURL({ envelope: parsedMessage });
+            }
         } catch (parsingError) {
             sentry.captureException(parsingError);
         }

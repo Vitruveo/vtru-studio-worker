@@ -2,6 +2,7 @@ import {
     PutObjectCommand,
     S3Client,
     DeleteObjectCommand,
+    DeleteObjectsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { AssetEnvelope, AssetStorageProvider } from '../types';
@@ -66,5 +67,33 @@ export class S3 implements AssetStorageProvider {
             logLevel: 'info',
         });
         return url;
+    }
+
+    async deleteFiles(envelope: AssetEnvelope) {
+        if (envelope.deleteKeys) {
+            const client = new S3Client({
+                region: AWS_DEFAULT_REGION,
+            });
+
+            const bucket = {
+                Bucket:
+                    envelope.origin === 'asset'
+                        ? ASSET_STORAGE_NAME
+                        : GENERAL_STORAGE_NAME,
+                Delete: {
+                    Objects: envelope.deleteKeys.map((key) => ({ Key: key })),
+                },
+            };
+
+            const command = new DeleteObjectsCommand(bucket);
+            await client.send(command);
+
+            this.loggerProvider.log({
+                message: JSON.stringify({
+                    envelope,
+                }),
+                logLevel: 'info',
+            });
+        }
     }
 }

@@ -5,6 +5,7 @@ export interface SendToExchangeCreatorsParams {
 
 export interface AssetEnvelope {
     path: string;
+    deleteKeys?: string[];
     method: 'PUT' | 'DELETE';
     origin: 'asset' | 'profile';
     creatorId: string;
@@ -13,6 +14,10 @@ export interface AssetEnvelope {
 
 export interface GeneratePreSignedURLParams {
     envelope: AssetEnvelope;
+}
+
+export interface DeleteFilesParams {
+    objectKeys: string[];
 }
 
 export interface AssetStorageProvider {

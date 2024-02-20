@@ -16,6 +16,7 @@ import { logger } from '../../../services';
 
 interface PreSignedUrlParams {
     path: string;
+    metadata: { [key: string]: string };
     method: 'PUT' | 'DELETE';
     origin: 'asset' | 'profile';
 }
@@ -40,6 +41,7 @@ export class S3 implements AssetStorageProvider {
                     ? ASSET_STORAGE_NAME
                     : GENERAL_STORAGE_NAME,
             Key: params.path,
+            Metadata: params.metadata,
         };
 
         if (params.method === 'PUT') {
@@ -58,6 +60,7 @@ export class S3 implements AssetStorageProvider {
             path: envelope.path,
             origin: envelope.origin,
             method: envelope.method,
+            metadata: envelope.metadata,
         });
         this.loggerProvider.log({
             message: JSON.stringify({

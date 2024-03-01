@@ -23,6 +23,7 @@ const message = ({ envelope, result, error }: MessageParams) =>
         error ? `, Error: ${error}` : ''
     }`;
 
+// TODO: use a separeted file for this function
 export const sendToExchangeCreators = async ({
     envelope,
     routingKey = 'preSignedURL',
@@ -46,6 +47,7 @@ export const sendToExchangeCreators = async ({
     }
 };
 
+// TODO: use a separeted file for this function
 export const generatePreSignedURL = async ({
     envelope,
 }: GeneratePreSignedURLParams): Promise<boolean> => {
@@ -110,8 +112,11 @@ export const start = async () => {
                 data.content.toString().trim()
             ) as AssetEnvelope;
 
+            // TODO: handle message as switch case (based on method)
             if (parsedMessage.method === 'DELETE') {
+                // FIX: do not place logic inside this function (only calls) and log all calls
                 const assetStorageProvider = createAssetStorageProvider();
+                // FIX: always use named parameters
                 await assetStorageProvider.deleteFiles(parsedMessage);
             } else {
                 await generatePreSignedURL({ envelope: parsedMessage });

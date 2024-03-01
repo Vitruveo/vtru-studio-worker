@@ -53,11 +53,14 @@ export const generatePreSignedURL = async ({
 }: GeneratePreSignedURLParams): Promise<boolean> => {
     const loggerProvider = remoteLogger.createLogger();
     await loggerProvider.prepare({ namespace: 'assetStorage' });
+
     try {
         const { creatorId, transactionId } = envelope;
 
         const assetStorageProvider = createAssetStorageProvider();
         const preSignedURL = await assetStorageProvider.createUrl(envelope);
+
+        console.log('preSignedURL', preSignedURL);
 
         await sendToExchangeCreators({
             envelope: JSON.stringify({
@@ -98,12 +101,18 @@ export const start = async () => {
     const channel = await queue.getChannel();
     const logQueue = `${RABBITMQ_EXCHANGE_CREATORS}.assets.${uniqueId}`;
 
+    console.log('RABBITMQ_EXCHANGE_CREATORS', RABBITMQ_EXCHANGE_CREATORS);
+
     channel?.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
         durable: true,
     });
     channel?.assertQueue(logQueue, { durable: false });
     channel?.bindQueue(logQueue, RABBITMQ_EXCHANGE_CREATORS, 'assets');
+
+    console.log('channel', channel);
+
     channel?.consume(logQueue, async (data) => {
+        console.log('channel consume data:', data);
         if (!data) return;
 
         try {
@@ -111,6 +120,8 @@ export const start = async () => {
             const parsedMessage = JSON.parse(
                 data.content.toString().trim()
             ) as AssetEnvelope;
+
+            console.log('parsedMessage', parsedMessage);
 
             // TODO: handle message as switch case (based on method)
             if (parsedMessage.method === 'DELETE') {

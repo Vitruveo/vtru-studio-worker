@@ -55,6 +55,7 @@ export const start = async () => {
     });
     channel?.assertQueue(logQueue, { durable: false });
     channel?.bindQueue(logQueue, RABBITMQ_EXCHANGE_MAIL, 'toSend');
+
     channel?.consume(logQueue, async (data) => {
         if (!data) return;
         try {

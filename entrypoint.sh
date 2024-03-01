@@ -14,7 +14,7 @@ if [ "x$@" = "xwait" ]; then
 	checkEnv RABBITMQ_HOST rabbitmq
 	node tools/wait.js $RABBITMQ_HOST $RABBITMQ_PORT
 
-	if [ "x$NODE_ENV" = "xproduction" ]; then
+	if [ "x$NODE_ENV" = "xproduction" ] || [ "x$NODE_ENV" = "xqa" ]; then
 		while true; do
 			date
 			npm start

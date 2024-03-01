@@ -1,5 +1,14 @@
 #!/bin/sh
 
+function checkEnv() {
+	envName=$1
+	envValue=$2
+	val=$(eval echo "\$$envName")
+	if [ "x$val" = "x" ]; then
+		export $envName=$envValue
+	fi
+}
+
 if [ "x$@" = "xwait" ] ; then
     if [ "x$RABBITMQ_PORT" = "x" ] ; then
         export RABBITMQ_PORT=5672

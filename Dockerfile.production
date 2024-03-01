@@ -9,6 +9,7 @@ RUN npm set-script prepare "" && \
     npm ci --omit=dev --no-audit --only=production --verbose
 
 COPY build ./
+COPY tools/ ./
 COPY entrypoint.sh ./
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]

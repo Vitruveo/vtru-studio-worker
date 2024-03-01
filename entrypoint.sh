@@ -9,7 +9,8 @@ function checkEnv() {
 	fi
 }
 
-if [ "x$@" = "xwait" ]; then
+params="$@"
+if [ "x$params" = "xwait" ]; then
 	checkEnv RABBITMQ_PORT 5672
 	checkEnv RABBITMQ_HOST rabbitmq
 	node tools/wait.js $RABBITMQ_HOST $RABBITMQ_PORT

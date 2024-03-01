@@ -8,11 +8,11 @@ export const createMailProvider = () => {
     if (MAIL_PROVIDER === 'mailtrap') {
         return new MailTrap();
     }
-    if (MAIL_PROVIDER === 'mailgun') {
-        // return new MailGun();
-    }
-    if (MAIL_PROVIDER === 'mailchimp') {
-        // return new MailChimp();
-    }
+    // if (MAIL_PROVIDER === 'mailgun') {
+    //     // return new MailGun();
+    // }
+    // if (MAIL_PROVIDER === 'mailchimp') {
+    //     // return new MailChimp();
+    // }
     throw new Error('Invalid mail provider');
 };

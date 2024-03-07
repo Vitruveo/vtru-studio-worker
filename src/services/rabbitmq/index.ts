@@ -24,6 +24,7 @@ export const disconnect = async () => {
 export const getConnection = async () => {
     try {
         if (!status.connection) {
+            console.log('RABBITMQ_URL:', RABBITMQ_URL);
             status.connection = await rabbitmq.connect(RABBITMQ_URL);
             status.isConnected = true;
         }

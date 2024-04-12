@@ -32,6 +32,7 @@ export const getConnection = async () => {
         status.connection = null;
         captureException(err, { tags: { scope: 'rabbitmq' } });
         logger('Error connecting to rabbitmq: %O', err);
+        process.exit(1);
     }
     return status;
 };
@@ -44,6 +45,7 @@ export const getChannel = async () => {
         }
     } catch (error) {
         captureException(error, { tags: { scope: 'rabbitmq' } });
+        process.exit(1);
     }
     return null;
 };

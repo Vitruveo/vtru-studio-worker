@@ -49,6 +49,10 @@ const start = async () => {
         setTimeout(start, 10000);
     });
 
+    rabbitmqStatus.connection.on('error', (error) => {
+        console.error('Error occurred in RabbitMQ connection:', error);
+    });
+
     if (workers.all || workers.express) await expressStart();
     if (workers.all || workers.mail) await mailStart();
     if (workers.all || workers.assetStorage) await assetStorageStart();

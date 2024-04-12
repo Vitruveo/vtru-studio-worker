@@ -106,10 +106,11 @@ export const start = async () => {
     channel?.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
         durable: true,
     });
+
     channel?.assertQueue(logQueue, { durable: false });
     channel?.bindQueue(logQueue, RABBITMQ_EXCHANGE_CREATORS, 'assets');
 
-    console.log('channel', channel);
+    console.log('channel is connected:', !!channel);
 
     channel?.consume(logQueue, async (data) => {
         console.log('channel consume data:', data);

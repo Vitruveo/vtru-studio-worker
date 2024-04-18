@@ -10,6 +10,13 @@ import {
 import { createAssetStorageProvider } from './factory';
 
 const logger = debug('workers:asset:storage');
+
+const status: {
+    channel: queue.Channel | null;
+} = {
+    channel: null,
+};
+
 const uniqueId = nanoid();
 
 interface MessageParams {
@@ -29,27 +36,29 @@ export const sendToExchangeCreators = async ({
     routingKey = 'preSignedURL',
 }: SendToExchangeCreatorsParams) => {
     try {
-        const channel = await queue.getChannel();
+        if (!status.channel) {
+            status.channel = await queue.getChannel();
 
-        if (!channel) {
-            logger('Channel not available');
-            process.exit(1);
+            if (!status.channel) {
+                logger('Channel not available');
+                process.exit(1);
+            }
+            status.channel.on('close', () => {
+                logger('Channel closed');
+                process.exit(1);
+            });
+            status.channel.on('error', (error) => {
+                logger('Error occurred in channel:', error);
+                process.exit(1);
+            });
+
+            status.channel.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
+                durable: true,
+            });
         }
-        channel.on('close', () => {
-            logger('Channel closed');
-            process.exit(1);
-        });
-        channel.on('error', (error) => {
-            logger('Error occurred in channel:', error);
-            process.exit(1);
-        });
 
-        channel.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
-            durable: true,
-        });
-
-        if (channel) {
-            channel.publish(
+        if (status.channel) {
+            status.channel.publish(
                 RABBITMQ_EXCHANGE_CREATORS,
                 routingKey,
                 Buffer.from(envelope)

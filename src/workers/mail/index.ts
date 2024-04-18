@@ -1,8 +1,11 @@
+import debug from 'debug';
 import { nanoid } from 'nanoid';
 import { RABBITMQ_EXCHANGE_MAIL } from '../../constants';
 import { sentry, queue, logger as remoteLogger } from '../../services';
 import type { MailEnvelope } from './types';
 import { createMailProvider } from './factory';
+
+const logger = debug('workers:mail');
 
 const uniqueId = nanoid();
 
@@ -49,17 +52,29 @@ export const sendMail = async (envelope: MailEnvelope): Promise<boolean> => {
 // TODO: create dead letter for queue.
 export const start = async () => {
     const channel = await queue.getChannel();
-    channel?.on('close', () => {
+
+    if (!channel) {
+        logger('Channel not available');
+        process.exit(1);
+    }
+    channel.on('close', () => {
+        logger('Channel closed');
         process.exit(1);
     });
+    channel.on('error', (error) => {
+        logger('Error occurred in channel:', error);
+        process.exit(1);
+    });
+
+    logger('Channel worker mail started');
+
     const logQueue = `${RABBITMQ_EXCHANGE_MAIL}.toSend.${uniqueId}`;
-    channel?.assertExchange(RABBITMQ_EXCHANGE_MAIL, 'topic', {
+    channel.assertExchange(RABBITMQ_EXCHANGE_MAIL, 'topic', {
         durable: true,
     });
-    channel?.assertQueue(logQueue, { durable: false });
-    channel?.bindQueue(logQueue, RABBITMQ_EXCHANGE_MAIL, 'toSend');
-
-    channel?.consume(logQueue, async (data) => {
+    channel.assertQueue(logQueue, { durable: false });
+    channel.bindQueue(logQueue, RABBITMQ_EXCHANGE_MAIL, 'toSend');
+    channel.consume(logQueue, async (data) => {
         if (!data) return;
         try {
             // parse envelope
@@ -67,10 +82,10 @@ export const start = async () => {
                 data.content.toString().trim()
             ) as MailEnvelope;
             await sendMail(parsedMessage);
-            channel?.ack(data);
+            channel.ack(data);
         } catch (parsingError) {
             sentry.captureException(parsingError);
-            channel?.nack(data);
+            channel.nack(data);
         }
     });
 };

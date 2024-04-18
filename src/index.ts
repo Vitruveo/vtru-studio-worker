@@ -37,21 +37,7 @@ if (process.argv.length === 2) {
 const start = async () => {
     logger('Worker starting');
 
-    const rabbitmqStatus = await getConnection();
-    if (!rabbitmqStatus.isConnected || !rabbitmqStatus.connection) {
-        logger('RabbitMQ connection failed, retrying in 10 seconds...');
-        setTimeout(start, 10000);
-        return;
-    }
-
-    rabbitmqStatus.connection.on('close', () => {
-        logger('RabbitMQ connection closed, restarting in 10 seconds...');
-        setTimeout(start, 10000);
-    });
-
-    rabbitmqStatus.connection.on('error', (error) => {
-        console.error('Error occurred in RabbitMQ connection:', error);
-    });
+    await getConnection();
 
     if (workers.all || workers.express) await expressStart();
     if (workers.all || workers.mail) await mailStart();

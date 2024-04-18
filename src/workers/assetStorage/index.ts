@@ -9,7 +9,7 @@ import {
 } from './types';
 import { createAssetStorageProvider } from './factory';
 
-const logger = debug('worker:asset:storage');
+const logger = debug('workers:asset:storage');
 const uniqueId = nanoid();
 
 interface MessageParams {
@@ -30,7 +30,21 @@ export const sendToExchangeCreators = async ({
 }: SendToExchangeCreatorsParams) => {
     try {
         const channel = await queue.getChannel();
-        channel?.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
+
+        if (!channel) {
+            logger('Channel not available');
+            process.exit(1);
+        }
+        channel.on('close', () => {
+            logger('Channel closed');
+            process.exit(1);
+        });
+        channel.on('error', (error) => {
+            logger('Error occurred in channel:', error);
+            process.exit(1);
+        });
+
+        channel.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
             durable: true,
         });
 
@@ -99,24 +113,30 @@ export const generatePreSignedURL = async ({
 // TODO: criar dead letter para queue
 export const start = async () => {
     const channel = await queue.getChannel();
-    channel?.on('close', () => {
+
+    if (!channel) {
+        logger('Channel not available');
+        process.exit(1);
+    }
+    channel.on('close', () => {
+        logger('Channel closed');
         process.exit(1);
     });
-    const logQueue = `${RABBITMQ_EXCHANGE_CREATORS}.assets.${uniqueId}`;
-
-    console.log('RABBITMQ_EXCHANGE_CREATORS', RABBITMQ_EXCHANGE_CREATORS);
-
-    channel?.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
-        durable: true,
+    channel.on('error', (error) => {
+        logger('Error occurred in channel:', error);
+        process.exit(1);
     });
 
-    channel?.assertQueue(logQueue, { durable: false });
-    channel?.bindQueue(logQueue, RABBITMQ_EXCHANGE_CREATORS, 'assets');
+    logger('Channel worker asset storage started');
 
-    console.log('channel is connected:', !!channel);
+    const logQueue = `${RABBITMQ_EXCHANGE_CREATORS}.assets.${uniqueId}`;
 
-    channel?.consume(logQueue, async (data) => {
-        console.log('channel consume data:', data);
+    channel.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
+        durable: true,
+    });
+    channel.assertQueue(logQueue, { durable: false });
+    channel.bindQueue(logQueue, RABBITMQ_EXCHANGE_CREATORS, 'assets');
+    channel.consume(logQueue, async (data) => {
         if (!data) return;
 
         try {
@@ -124,8 +144,6 @@ export const start = async () => {
             const parsedMessage = JSON.parse(
                 data.content.toString().trim()
             ) as AssetEnvelope;
-
-            console.log('parsedMessage', parsedMessage);
 
             // TODO: handle message as switch case (based on method)
             if (parsedMessage.method === 'DELETE') {
@@ -139,6 +157,6 @@ export const start = async () => {
         } catch (parsingError) {
             sentry.captureException(parsingError);
         }
-        channel?.ack(data);
+        channel.ack(data);
     });
 };

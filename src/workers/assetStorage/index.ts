@@ -99,6 +99,9 @@ export const generatePreSignedURL = async ({
 // TODO: criar dead letter para queue
 export const start = async () => {
     const channel = await queue.getChannel();
+    channel?.on('close', () => {
+        process.exit(1);
+    });
     const logQueue = `${RABBITMQ_EXCHANGE_CREATORS}.assets.${uniqueId}`;
 
     console.log('RABBITMQ_EXCHANGE_CREATORS', RABBITMQ_EXCHANGE_CREATORS);

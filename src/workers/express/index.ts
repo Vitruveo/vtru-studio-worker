@@ -9,6 +9,9 @@ export const start = async () => {
     await loggerProvider.prepare({ namespace: 'express' });
 
     const channel = await queue.getChannel();
+    channel?.on('close', () => {
+        process.exit(1);
+    });
     const logQueue = `${RABBITMQ_EXCHANGE_EXPRESS}.log.${uniqueId}`;
 
     channel?.assertExchange(RABBITMQ_EXCHANGE_EXPRESS, 'topic', {

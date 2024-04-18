@@ -27,6 +27,15 @@ export const getConnection = async () => {
             console.log('RABBITMQ_URL:', RABBITMQ_URL);
             status.connection = await rabbitmq.connect(RABBITMQ_URL);
             status.isConnected = true;
+            status.connection.on('close', () => {
+                console.log('RabbitMQ connection closed');
+                // status.connection = null;
+                process.exit(1);
+            });
+            status.connection.on('error', (error) => {
+                console.error('Error occurred in RabbitMQ connection:', error);
+                process.exit(1);
+            });
         }
     } catch (err) {
         status.isConnected = false;
@@ -44,6 +53,8 @@ export const getChannel = async () => {
         if (connection) {
             return connection.createChannel();
         }
+
+        process.exit(1);
     } catch (error) {
         captureException(error, { tags: { scope: 'rabbitmq' } });
         process.exit(1);

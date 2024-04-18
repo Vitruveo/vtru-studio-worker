@@ -49,6 +49,9 @@ export const sendMail = async (envelope: MailEnvelope): Promise<boolean> => {
 // TODO: create dead letter for queue
 export const start = async () => {
     const channel = await queue.getChannel();
+    channel?.on('close', () => {
+        process.exit(1);
+    });
     const logQueue = `${RABBITMQ_EXCHANGE_MAIL}.toSend.${uniqueId}`;
     channel?.assertExchange(RABBITMQ_EXCHANGE_MAIL, 'topic', {
         durable: true,

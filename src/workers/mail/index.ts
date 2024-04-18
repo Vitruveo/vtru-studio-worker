@@ -46,7 +46,7 @@ export const sendMail = async (envelope: MailEnvelope): Promise<boolean> => {
     return false;
 };
 
-// TODO: create dead letter for queue
+// TODO: create dead letter for queue.
 export const start = async () => {
     const channel = await queue.getChannel();
     channel?.on('close', () => {

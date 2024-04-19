@@ -69,6 +69,7 @@ export const start = async () => {
     logger('Channel worker mail started');
 
     const logQueue = `${RABBITMQ_EXCHANGE_MAIL}.toSend.${uniqueId}`;
+    logger('logQueue', logQueue);
     channel.assertExchange(RABBITMQ_EXCHANGE_MAIL, 'topic', {
         durable: true,
     });
@@ -87,5 +88,13 @@ export const start = async () => {
             sentry.captureException(parsingError);
             channel.nack(data);
         }
+    });
+
+    process.once('SIGINT', async () => {
+        logger(`Deleting queue ${logQueue}`);
+        await channel.deleteQueue(logQueue);
+
+        // disconnect from RabbitMQ
+        await queue.disconnect();
     });
 };

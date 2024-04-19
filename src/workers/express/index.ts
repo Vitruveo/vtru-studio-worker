@@ -29,14 +29,14 @@ export const start = async () => {
     logger('Channel worker express started');
 
     const logQueue = `${RABBITMQ_EXCHANGE_EXPRESS}.log.${uniqueId}`;
-
-    channel?.assertExchange(RABBITMQ_EXCHANGE_EXPRESS, 'topic', {
+    logger('logQueue', logQueue);
+    channel.assertExchange(RABBITMQ_EXCHANGE_EXPRESS, 'topic', {
         durable: true,
     });
-    channel?.assertQueue(logQueue, { durable: false });
-    channel?.bindQueue(logQueue, RABBITMQ_EXCHANGE_EXPRESS, 'log');
+    channel.assertQueue(logQueue, { durable: false });
+    channel.bindQueue(logQueue, RABBITMQ_EXCHANGE_EXPRESS, 'log');
 
-    channel?.consume(logQueue, async (message) => {
+    channel.consume(logQueue, async (message) => {
         if (!message) return;
 
         const envelope = message.content.toString().trim();
@@ -49,11 +49,19 @@ export const start = async () => {
                 logLevel: 'info',
             });
 
-            channel?.ack(message);
+            channel.ack(message);
         } catch (error) {
             sentry.captureException(error);
 
-            channel?.nack(message);
+            channel.nack(message);
         }
+    });
+
+    process.once('SIGINT', async () => {
+        logger(`Deleting queue ${logQueue}`);
+        await channel.deleteQueue(logQueue);
+
+        // disconnect from RabbitMQ
+        await queue.disconnect();
     });
 };

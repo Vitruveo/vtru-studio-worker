@@ -33,10 +33,16 @@ export const disconnect = async () => {
 
         try {
             await oldConnection.close();
+            return; // exit function
         } catch (error) {
-            // ignore
+            logger('Error closing RabbitMQ connection: %O', error);
+            captureException(error, { tags: { scope: 'rabbitmq' } });
+            process.exit(1);
         }
     }
+
+    logger('RabbitMQ connection not established');
+    process.exit(1);
 };
 
 export const getConnection = async () => {

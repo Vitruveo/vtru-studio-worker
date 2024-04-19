@@ -139,7 +139,7 @@ export const start = async () => {
     logger('Channel worker asset storage started');
 
     const logQueue = `${RABBITMQ_EXCHANGE_CREATORS}.assets.${uniqueId}`;
-
+    logger('logQueue', logQueue);
     channel.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
         durable: true,
     });
@@ -167,5 +167,13 @@ export const start = async () => {
             sentry.captureException(parsingError);
         }
         channel.ack(data);
+    });
+
+    process.once('SIGINT', async () => {
+        logger(`Deleting queue ${logQueue}`);
+        await channel.deleteQueue(logQueue);
+
+        // disconnect from RabbitMQ
+        await queue.disconnect();
     });
 };

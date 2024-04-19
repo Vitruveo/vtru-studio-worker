@@ -116,25 +116,43 @@ export const generatePreSignedURL = async ({
 
 // TODO: criar dead letter para queue
 export const start = async () => {
+    const loggerProvider = remoteLogger.createLogger();
+    await loggerProvider.prepare({ namespace: 'assetStorage' });
+
     const channel = await queue.getChannel();
 
     if (!channel) {
-        logger('Channel not available');
+        loggerProvider.log({
+            message: 'Channel not available',
+            logLevel: 'error',
+        });
         process.exit(1);
     }
     channel.on('close', () => {
-        logger('Channel closed');
+        loggerProvider.log({
+            message: 'Channel closed',
+            logLevel: 'error',
+        });
         process.exit(1);
     });
     channel.on('error', (error) => {
-        logger('Error occurred in channel:', error);
+        loggerProvider.log({
+            message: `Error occurred in channel: ${error}`,
+            logLevel: 'error',
+        });
         process.exit(1);
     });
 
-    logger('Channel worker asset storage started');
+    loggerProvider.log({
+        message: 'Channel worker asset storage started',
+        logLevel: 'info',
+    });
 
     const logQueue = `${RABBITMQ_EXCHANGE_CREATORS}.assets`;
-    logger('logQueue', logQueue, 'routingKey', 'assets');
+    loggerProvider.log({
+        message: `Creating queue ${logQueue}`,
+        logLevel: 'info',
+    });
     channel.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
         durable: true,
     });
@@ -142,7 +160,10 @@ export const start = async () => {
     channel.bindQueue(logQueue, RABBITMQ_EXCHANGE_CREATORS, 'assets');
     channel.consume(logQueue, async (data) => {
         if (!data) {
-            logger('logQueue', logQueue, 'message', 'No message received');
+            loggerProvider.log({
+                message: `No message received in queue ${logQueue}`,
+                logLevel: 'info',
+            });
             return;
         }
         try {
@@ -153,9 +174,19 @@ export const start = async () => {
 
             const content = data.content.toString();
 
-            logger('logQueue', logQueue, 'message', content);
+            loggerProvider.log({
+                message: `Received message in queue ${logQueue}: ${content}`,
+                logLevel: 'info',
+            });
             // parse envelope
             const parsedMessage = JSON.parse(content.trim()) as AssetEnvelope;
+
+            loggerProvider.log({
+                message: `Parsed message in queue ${logQueue}: ${JSON.stringify(
+                    parsedMessage
+                )}`,
+                logLevel: 'info',
+            });
 
             // TODO: handle message as switch case (based on method)
             if (parsedMessage.method === 'DELETE') {
@@ -171,12 +202,19 @@ export const start = async () => {
             return;
         } catch (parsingError) {
             sentry.captureException(parsingError);
+            loggerProvider.log({
+                message: `Error parsing message in queue ${logQueue}: ${parsingError}`,
+                logLevel: 'error',
+            });
         }
         channel.nack(data);
     });
 
     process.once('SIGINT', async () => {
-        logger(`Closing channel ${logQueue}`);
+        loggerProvider.log({
+            message: `Closing channel ${logQueue}`,
+            logLevel: 'info',
+        });
         await channel.close();
 
         // disconnect from RabbitMQ

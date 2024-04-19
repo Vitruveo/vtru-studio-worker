@@ -1,5 +1,4 @@
 import debug from 'debug';
-import { nanoid } from 'nanoid';
 import { RABBITMQ_EXCHANGE_CREATORS } from '../../constants';
 import { sentry, queue, logger as remoteLogger } from '../../services';
 import {
@@ -16,8 +15,6 @@ const status: {
 } = {
     channel: null,
 };
-
-const uniqueId = nanoid();
 
 interface MessageParams {
     envelope: AssetEnvelope;
@@ -83,8 +80,6 @@ export const generatePreSignedURL = async ({
         const assetStorageProvider = createAssetStorageProvider();
         const preSignedURL = await assetStorageProvider.createUrl(envelope);
 
-        console.log('preSignedURL', preSignedURL);
-
         await sendToExchangeCreators({
             envelope: JSON.stringify({
                 preSignedURL,
@@ -138,21 +133,29 @@ export const start = async () => {
 
     logger('Channel worker asset storage started');
 
-    const logQueue = `${RABBITMQ_EXCHANGE_CREATORS}.assets.${uniqueId}`;
-    logger('logQueue', logQueue);
+    const logQueue = `${RABBITMQ_EXCHANGE_CREATORS}.assets`;
+    logger('logQueue', logQueue, 'routingKey', 'assets');
     channel.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
         durable: true,
     });
     channel.assertQueue(logQueue, { durable: false });
     channel.bindQueue(logQueue, RABBITMQ_EXCHANGE_CREATORS, 'assets');
     channel.consume(logQueue, async (data) => {
-        if (!data) return;
-
+        if (!data) {
+            logger('logQueue', logQueue, 'message', 'No message received');
+            return;
+        }
         try {
+            if (data.fields.routingKey !== 'assets') {
+                channel.nack(data);
+                return;
+            }
+
+            const content = data.content.toString();
+
+            logger('logQueue', logQueue, 'message', content);
             // parse envelope
-            const parsedMessage = JSON.parse(
-                data.content.toString().trim()
-            ) as AssetEnvelope;
+            const parsedMessage = JSON.parse(content.trim()) as AssetEnvelope;
 
             // TODO: handle message as switch case (based on method)
             if (parsedMessage.method === 'DELETE') {
@@ -163,15 +166,18 @@ export const start = async () => {
             } else {
                 await generatePreSignedURL({ envelope: parsedMessage });
             }
+
+            channel.ack(data);
+            return;
         } catch (parsingError) {
             sentry.captureException(parsingError);
         }
-        channel.ack(data);
+        channel.nack(data);
     });
 
     process.once('SIGINT', async () => {
-        logger(`Deleting queue ${logQueue}`);
-        await channel.deleteQueue(logQueue);
+        logger(`Closing channel ${logQueue}`);
+        await channel.close();
 
         // disconnect from RabbitMQ
         await queue.disconnect();

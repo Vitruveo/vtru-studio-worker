@@ -10,6 +10,7 @@ on:
             - package.json
             - package-lock.json
             - tools/**/*.js
+            - entrypoint.sh
 
 jobs:
     build:

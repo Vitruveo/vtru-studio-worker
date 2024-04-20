@@ -6,9 +6,10 @@ WORKDIR /app
 COPY package*.json /app/
 
 RUN npm set-script prepare "" && \
-    npm ci --omit=dev --no-audit --only=production --verbose
+  npm ci --omit=dev --no-audit --only=production --verbose
 
 COPY build ./
+COPY tools ./tools/
 COPY entrypoint.sh ./
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]

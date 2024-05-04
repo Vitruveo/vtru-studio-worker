@@ -7,3 +7,4 @@ export const RABBITMQ_EXCHANGE_MAIL =
     process.env.RABBITMQ_EXCHANGE_MAIL || 'mail';
 export const RABBITMQ_EXCHANGE_CREATORS =
     process.env.RABBITMQ_EXCHANGE_CREATORS || 'creators';
+export const RABBITMQ_EXCHANGE_RSS = process.env.RABBITMQ_EXCHANGE_RSS || 'rss';

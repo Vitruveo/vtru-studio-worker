@@ -15,6 +15,8 @@ export class SendGrid implements MailProvider {
             dynamicTemplateData: {
                 code: envelope.text,
                 link: envelope.link,
+                creator: envelope.creator,
+                title: envelope.title,
             },
         };
 

@@ -1,27 +1,6 @@
-export interface Payload {
-    creator: string;
-    assets: string[];
+export interface PayloadConsign {
+    license: 'nft' | 'print' | 'stream' | 'remix';
     title: string;
-    sound: string;
     url: string;
-}
-
-export interface Item {
-    title: string;
-    link: string;
-    description: string;
-    pubDate: string;
-}
-
-export interface RSS {
-    rss: {
-        channel: {
-            item: Item | Item[];
-        };
-    };
-}
-
-export interface AddItemParams {
-    raw: RSS;
-    item: Payload;
+    creator: string;
 }

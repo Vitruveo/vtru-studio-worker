@@ -1,20 +1,20 @@
-import { join } from 'path';
-import fs from 'fs/promises';
 import debug from 'debug';
+import fs from 'fs/promises';
+import { join } from 'path';
 
 import {
     ASSET_TEMP_DIR,
-    RSS_NAME,
     GENERAL_STORAGE_NAME,
-} from '../../constants';
-import { exists, upload } from '../../services/aws';
+    RSS_CURATE_STACK,
+} from '../../../../constants';
+import { exists, upload } from '../../../../services/aws';
 
 const logger = debug('workers:rss:checkExistsFile');
 
 const data = `
 <rss>
 <channel>
-    <title>VITRUVEO</title>
+    <title>VITRUVEO - RSS CURATE STACK</title>
     <link>https://vitruveo.xyz/</link>
     <description>VITRUVEO is a platform for creators to share their work with the world.</description>
     <language>en</language>
@@ -22,12 +22,12 @@ const data = `
 </rss>`;
 
 export const checkExistsFile = async () => {
-    const fileName = join(ASSET_TEMP_DIR, RSS_NAME);
+    const fileName = join(ASSET_TEMP_DIR, RSS_CURATE_STACK);
 
     try {
         // check exists
         const hasFile = await exists({
-            key: RSS_NAME,
+            key: RSS_CURATE_STACK,
             bucket: GENERAL_STORAGE_NAME,
         });
         logger('hasFile', hasFile);
@@ -42,7 +42,7 @@ export const checkExistsFile = async () => {
             await upload({
                 fileName,
                 bucket: GENERAL_STORAGE_NAME,
-                key: RSS_NAME,
+                key: RSS_CURATE_STACK,
             });
             logger('File uploaded');
         }

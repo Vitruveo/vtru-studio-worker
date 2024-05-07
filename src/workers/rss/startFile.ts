@@ -9,7 +9,7 @@ import {
 } from '../../constants';
 import { exists, upload } from '../../services/aws';
 
-const logger = debug('workers:rss:checkExistsFile');
+const logger = debug('workers:rss:checkExistsRssFile');
 
 const data = `
 <rss>
@@ -21,7 +21,7 @@ const data = `
 </channel>
 </rss>`;
 
-export const checkExistsFile = async () => {
+export const checkExistsRssFile = async () => {
     const fileName = join(ASSET_TEMP_DIR, RSS_NAME);
 
     try {
@@ -30,13 +30,13 @@ export const checkExistsFile = async () => {
             key: RSS_NAME,
             bucket: GENERAL_STORAGE_NAME,
         });
-        logger('hasFile', hasFile);
+        logger('hasFile rss', hasFile);
 
         if (!hasFile) {
             // create file
             await fs.mkdir(ASSET_TEMP_DIR, { recursive: true });
             await fs.writeFile(fileName, data);
-            logger('File created');
+            logger('File rss created');
 
             // upload file
             await upload({
@@ -44,10 +44,10 @@ export const checkExistsFile = async () => {
                 bucket: GENERAL_STORAGE_NAME,
                 key: RSS_NAME,
             });
-            logger('File uploaded');
+            logger('File rss uploaded');
         }
     } catch (error) {
-        logger('Error startFile', error);
+        logger('Error start file rss', error);
     } finally {
         // remove file
         try {

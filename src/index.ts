@@ -8,8 +8,12 @@ import { captureException } from './services/sentry';
 import { start as expressStart } from './workers/express';
 import { start as mailStart } from './workers/mail';
 import { start as assetStorageStart } from './workers/assetStorage';
+import { start as assetsStart } from './workers/assets';
+import { checkExistsSitemapFile } from './workers/assets/startFile';
 import { start as rssStart } from './workers/rss';
-import { checkExistsFile } from './workers/rss/startFile';
+import { checkExistsRssFile } from './workers/rss/startFile';
+import { remove } from './services/aws';
+import { SITEMAP_NAME, STORE_BUCKET_NAME } from './constants';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -24,6 +28,7 @@ const workers: Record<string, boolean> = {
     mail: false,
     assetStorage: false,
     rss: false,
+    assets: false,
 };
 
 // sample argv: [ '/usr/bin/node', '/home/rodrigo/Projects/vitruveo-studio/core/dist/index.js', 'express', 'mail' ]
@@ -45,8 +50,13 @@ const start = async () => {
     if (workers.all || workers.express) await expressStart();
     if (workers.all || workers.mail) await mailStart();
     if (workers.all || workers.assetStorage) await assetStorageStart();
+    if (workers.all || workers.assets) {
+        // await remove({ bucket: STORE_BUCKET_NAME, key: SITEMAP_NAME });
+        await checkExistsSitemapFile();
+        await assetsStart();
+    }
     if (workers.all || workers.rss) {
-        await checkExistsFile();
+        await checkExistsRssFile();
         await rssStart();
     }
 

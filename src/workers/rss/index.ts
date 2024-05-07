@@ -120,12 +120,10 @@ const execute = async ({ assets, creator, sound, title, url }: Payload) => {
         logger('Error execute', error);
         captureException(error, { tags: { scope: 'rss' } });
     } finally {
-        try {
-            // remove file
-            await fs.unlink(fileName);
-        } catch (error) {
+        // remove file
+        await fs.unlink(fileName).catch(() => {
             // nothing
-        }
+        });
     }
 };
 

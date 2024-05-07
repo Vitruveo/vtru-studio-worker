@@ -7,3 +7,5 @@ export * from './upload';
 export * from './logger';
 export * from './assets';
 export * from './rss';
+export * from './sitemap';
+export * from './store';

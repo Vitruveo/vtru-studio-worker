@@ -33,10 +33,10 @@ const renderDescription = ({
 <table>
     <thead>
         <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Artist</th>
-            <th>Link</th>
+            <th style="magin-right: 10px;">Title</th>
+            <th style="magin-right: 10px;">Description</th>
+            <th style="magin-right: 10px;">Artist</th>
+            <th style="magin-right: 10px;">Link</th>
         </tr>
     </thead>
     <tbody>
@@ -44,10 +44,18 @@ const renderDescription = ({
             .map(
                 (asset) => `
                     <tr>
-                        <td><p>${asset.title}</p></td>
-                        <td><p>${convertDescription(asset.description)}</p></td>
-                        <td><p>${asset.artist}</p></td>
-                        <td><a href="${asset.url}" target="_blank">Link</a></td>
+                        <td style="magin-right: 10px;"><p>${
+                            asset.title
+                        }</p></td>
+                        <td style="magin-right: 10px;"><p>${convertDescription(
+                            asset.description
+                        )}</p></td>
+                        <td style="magin-right: 10px;"><p>${
+                            asset.artist
+                        }</p></td>
+                        <td style="magin-right: 10px;"><a href="${
+                            asset.url
+                        }" target="_blank">View on Store</a></td>
                     </tr>
                 `
             )

@@ -5,6 +5,8 @@ export interface MailEnvelope {
     html: string;
     template: string;
     link: string;
+    creator: string;
+    title: string;
 }
 
 export interface MailProvider {

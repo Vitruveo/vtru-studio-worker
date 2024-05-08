@@ -8,6 +8,7 @@ import { captureException } from './services/sentry';
 import { start as expressStart } from './workers/express';
 import { start as mailStart } from './workers/mail';
 import { start as assetStorageStart } from './workers/assetStorage';
+import { start as rssStart } from './workers/rss';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -21,6 +22,7 @@ const workers: Record<string, boolean> = {
     express: false,
     mail: false,
     assetStorage: false,
+    rss: false,
 };
 
 // sample argv: [ '/usr/bin/node', '/home/rodrigo/Projects/vitruveo-studio/core/dist/index.js', 'express', 'mail' ]
@@ -32,30 +34,18 @@ if (process.argv.length === 2) {
         workers[arg] = true;
     });
 }
-// #endregion arguments
+// #endregion arguments.
 
 const start = async () => {
     logger('Worker starting');
 
-    const rabbitmqStatus = await getConnection();
-    if (!rabbitmqStatus.isConnected || !rabbitmqStatus.connection) {
-        logger('RabbitMQ connection failed, retrying in 10 seconds...');
-        setTimeout(start, 10000);
-        return;
-    }
-
-    rabbitmqStatus.connection.on('close', () => {
-        logger('RabbitMQ connection closed, restarting in 10 seconds...');
-        setTimeout(start, 10000);
-    });
-
-    rabbitmqStatus.connection.on('error', (error) => {
-        console.error('Error occurred in RabbitMQ connection:', error);
-    });
+    await getConnection();
 
     if (workers.all || workers.express) await expressStart();
     if (workers.all || workers.mail) await mailStart();
     if (workers.all || workers.assetStorage) await assetStorageStart();
+    if (workers.all || workers.rss) await rssStart();
+
     logger('Worker started');
 };
 

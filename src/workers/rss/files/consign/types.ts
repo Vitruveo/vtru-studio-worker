@@ -1,8 +1,10 @@
 export interface PayloadConsign {
     license: string;
     url: string;
-    title: string;
+    image: string;
     creator: string;
+    title: string;
+    description: string;
 }
 
 export interface Item {
@@ -32,6 +34,8 @@ export interface CheckExistsFileParams {
 
 export interface RenderDescription {
     url: string;
-    title: string;
+    image: string;
     creator: string;
+    title: string;
+    description: string;
 }

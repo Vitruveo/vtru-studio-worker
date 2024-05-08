@@ -4,7 +4,11 @@ import fs from 'fs/promises';
 import { XMLBuilder, XMLParser, XMLValidator } from 'fast-xml-parser';
 
 import { download, upload } from '../../../../services/aws';
-import { ASSET_TEMP_DIR, GENERAL_STORAGE_NAME } from '../../../../constants';
+import {
+    ASSET_TEMP_DIR,
+    GENERAL_STORAGE_NAME,
+    RSS_AMOUNT_ITEMS,
+} from '../../../../constants';
 import {
     AddItemConsignParams,
     PayloadConsign,
@@ -15,18 +19,21 @@ import { checkExistsFile } from './check';
 const logger = debug('workers:rss:consign');
 
 const renderDescription = ({
-    title,
     url,
+    image,
     creator,
-}: RenderDescription) => `<html>
-<body>
-    <p>Title: ${title}</p>
-    <p>Creator: ${creator}</p>
-    <div>
-        <img src="${url}" alt="${title}" />
-    </div>
-</body>
-</html>`;
+    title,
+    description,
+}: RenderDescription) => `
+<p>Title: <strong>${title}</strong></p>
+<p>Creator: <strong>${creator}</strong></p>
+<br />
+<p>${description}</p>
+<div>
+    <img src="${image}" alt="${title}" />
+</div>
+<a href="${url}" style="width: 100%; text-align: center;">>View on Store</a>
+`;
 
 const addItemConsign = ({ raw, item }: AddItemConsignParams) => {
     let response = raw.rss.channel.item;
@@ -57,6 +64,13 @@ const addItemConsign = ({ raw, item }: AddItemConsignParams) => {
 
     // check if item is array
     if (Array.isArray(response)) {
+        if (response.length >= RSS_AMOUNT_ITEMS) {
+            for (let i = RSS_AMOUNT_ITEMS; i <= response.length; i += 1) {
+                // remove first item
+                response.shift();
+            }
+        }
+
         response.push({
             title: item.title,
             link: item.url,
@@ -74,6 +88,8 @@ export const handleConsignLicenses = async ({
     creator,
     title,
     url,
+    image,
+    description,
 }: PayloadConsign) => {
     const fileName = join(ASSET_TEMP_DIR, license);
     try {
@@ -102,7 +118,7 @@ export const handleConsignLicenses = async ({
         // add item
         const item = addItemConsign({
             raw: parsedData,
-            item: { creator, title, url, license },
+            item: { creator, title, url, license, image, description },
         });
 
         parsedData.rss.channel.item = item;

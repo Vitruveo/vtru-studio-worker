@@ -7,7 +7,7 @@ import {
     ASSET_TEMP_DIR,
     GENERAL_STORAGE_NAME,
     RSS_CURATE_STACK,
-    RSS_CURATE_STACK_AMOUNT_ITEMS,
+    RSS_AMOUNT_ITEMS,
 } from '../../../../constants';
 import {
     AddItemCurateStackParams,
@@ -17,6 +17,7 @@ import {
 import { download, upload } from '../../../../services/aws';
 import { captureException } from '../../../../services/sentry';
 import { checkExistsFile } from './check';
+import { convertDescription } from '../utils/convertDescription';
 
 const logger = debug('workers:rss:curateStack');
 
@@ -25,38 +26,35 @@ const renderDescription = ({
     sound,
     assets,
     url,
-}: RenderDescription) => `<html>
-<body>
-    <p>Title: ${title}</p>
-    <p>Sound: ${sound}</p>
-    <div><video controls><source src="${url}" type="video/mp4"></video></div>
-    <div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Assets</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${assets
-                    .map(
-                        (asset) => `
-                            <tr>
-                                <td>
-                                    <p>Title: ${asset.title}</p>
-                                    <p>Description: ${asset.description}</p>
-                                    <p>Artist: ${asset.artist}</p>
-                                    <a href="${asset.url}" target="_blank">Link</a>
-                                </td>
-                            </tr>
-                        `
-                    )
-                    .join('')}
-            </tbody>
-        </table>
-    </div>
-</body>
-</html>`;
+}: RenderDescription) => `
+<p>Title: <strong>${title}</strong></p>
+<p>Sound: <strong>${sound}</strong></p>
+<div><video controls><source src="${url}" type="video/mp4"></video></div>
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Artist</th>
+            <th>Link</th>
+        </tr>
+    </thead>
+    <tbody>
+        ${assets
+            .map(
+                (asset) => `
+                    <tr>
+                        <td><p>${asset.title}</p></td>
+                        <td><p>${convertDescription(asset.description)}</p></td>
+                        <td><p>${asset.artist}</p></td>
+                        <td><a href="${asset.url}" target="_blank">Link</a></td>
+                    </tr>
+                `
+            )
+            .join('')}
+    </tbody>
+</table>
+`;
 
 const addItemCurateStack = ({ raw, item }: AddItemCurateStackParams) => {
     let response = raw.rss.channel.item;
@@ -87,12 +85,8 @@ const addItemCurateStack = ({ raw, item }: AddItemCurateStackParams) => {
 
     // check if item is array
     if (Array.isArray(response)) {
-        if (response.length >= RSS_CURATE_STACK_AMOUNT_ITEMS) {
-            for (
-                let i = RSS_CURATE_STACK_AMOUNT_ITEMS;
-                i <= response.length;
-                i += 1
-            ) {
+        if (response.length >= RSS_AMOUNT_ITEMS) {
+            for (let i = RSS_AMOUNT_ITEMS; i <= response.length; i += 1) {
                 // remove first item
                 response.shift();
             }

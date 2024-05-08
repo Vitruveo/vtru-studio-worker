@@ -3,4 +3,6 @@ export interface PayloadConsign {
     title: string;
     url: string;
     creator: string;
+    image: string;
+    description: string;
 }

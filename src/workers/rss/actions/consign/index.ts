@@ -10,6 +10,7 @@ import { handleConsignLicenses } from './licenses';
 
 export const handleConsign = ({
     license,
+    id,
     creator,
     title,
     url,
@@ -20,6 +21,7 @@ export const handleConsign = ({
 
     if (license === 'nft')
         return handleConsignLicenses({
+            id,
             creator,
             image,
             title,
@@ -30,6 +32,7 @@ export const handleConsign = ({
 
     if (license === 'remix')
         return handleConsignLicenses({
+            id,
             creator,
             image,
             title,
@@ -40,6 +43,7 @@ export const handleConsign = ({
 
     if (license === 'print')
         return handleConsignLicenses({
+            id,
             creator,
             image,
             title,
@@ -50,6 +54,7 @@ export const handleConsign = ({
 
     if (license === 'stream')
         return handleConsignLicenses({
+            id,
             creator,
             image,
             title,

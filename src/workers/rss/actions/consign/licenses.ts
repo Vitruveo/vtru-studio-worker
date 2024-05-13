@@ -20,8 +20,6 @@ import { isVideo } from '../utils/isVideo';
 
 const logger = debug('workers:rss:consign');
 
-const getOriginalLink = (url: string) => url.replace(/\/[^/]*$/, '');
-
 const renderDescription = ({
     url,
     image,
@@ -88,16 +86,25 @@ const addItemConsign = ({ raw, item }: AddItemParams) => {
             guid: item.id,
         });
 
-        return response.reduce<Item[]>((acc, cur) => {
-            // remove duplicate link item
-            if (
-                acc.some(
-                    (i) => getOriginalLink(i.link) === getOriginalLink(cur.link)
-                )
-            )
-                return acc;
-            return [...acc, cur];
-        }, []);
+        return response
+            .map((cur) => {
+                if (!cur.guid) {
+                    const regex = /\/([^/]+)\/([^/]+)\/([^/]+)$/;
+                    const [, , guid] = cur.link.match(regex) || [];
+                    if (guid) {
+                        return {
+                            ...cur,
+                            guid,
+                        };
+                    }
+                }
+                return cur;
+            })
+            .reduce<Item[]>((acc, cur) => {
+                // remove duplicate id
+                if (acc.some((i) => i.guid === cur.guid)) return acc;
+                return [...acc, cur];
+            }, []);
     }
 
     return response;

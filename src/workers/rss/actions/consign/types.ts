@@ -5,6 +5,7 @@ export interface PayloadConsign {
     creator: string;
     title: string;
     description: string;
+    id: string;
 }
 
 export interface Item {
@@ -12,6 +13,7 @@ export interface Item {
     link: string;
     description: string;
     pubDate: string;
+    guid: string;
 }
 
 export interface RSS {
@@ -22,7 +24,7 @@ export interface RSS {
     };
 }
 
-export interface AddItemConsignParams {
+export interface AddItemParams {
     raw: RSS;
     item: PayloadConsign;
 }
@@ -38,4 +40,5 @@ export interface RenderDescription {
     creator: string;
     title: string;
     description: string;
+    id: string;
 }

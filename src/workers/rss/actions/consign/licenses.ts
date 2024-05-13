@@ -10,11 +10,13 @@ import {
     RSS_AMOUNT_ITEMS,
 } from '../../../../constants';
 import {
-    AddItemConsignParams,
+    AddItemParams,
+    Item,
     PayloadConsign,
     RenderDescription,
 } from './types';
 import { checkExistsFile } from './check';
+import { isVideo } from '../utils/isVideo';
 
 const logger = debug('workers:rss:consign');
 
@@ -30,12 +32,16 @@ const renderDescription = ({
 <br />
 <p>${description}</p>
 <div>
-    <img src="${image}" alt="${title}" />
+    ${
+        isVideo(image)
+            ? `<video controls style="width: 100%;"><source src="${image}" type="video/mp4"></video>`
+            : `<img src="${image}" style="width: 100%;" />`
+    }
 </div>
 <a href="${url}" style="width: 100%; text-align: center;">>View on Store</a>
 `;
 
-const addItemConsign = ({ raw, item }: AddItemConsignParams) => {
+const addItemConsign = ({ raw, item }: AddItemParams) => {
     let response = raw.rss.channel.item;
 
     // check if item not exists
@@ -45,6 +51,7 @@ const addItemConsign = ({ raw, item }: AddItemConsignParams) => {
             link: item.url,
             description: renderDescription(item),
             pubDate: new Date().toISOString(),
+            guid: item.id,
         };
 
         return response;
@@ -58,8 +65,8 @@ const addItemConsign = ({ raw, item }: AddItemConsignParams) => {
             link: item.url,
             description: renderDescription(item),
             pubDate: new Date().toISOString(),
+            guid: item.id,
         });
-        return response;
     }
 
     // check if item is array
@@ -76,8 +83,28 @@ const addItemConsign = ({ raw, item }: AddItemConsignParams) => {
             link: item.url,
             description: renderDescription(item),
             pubDate: new Date().toISOString(),
+            guid: item.id,
         });
-        return response;
+
+        return response
+            .map((cur) => {
+                if (!cur.guid) {
+                    const regex = /\/([^/]+)\/([^/]+)\/([^/]+)$/;
+                    const [, , guid] = cur.link.match(regex) || [];
+                    if (guid) {
+                        return {
+                            ...cur,
+                            guid,
+                        };
+                    }
+                }
+                return cur;
+            })
+            .reduce<Item[]>((acc, cur) => {
+                // remove duplicate id
+                if (acc.some((i) => i.guid === cur.guid)) return acc;
+                return [...acc, cur];
+            }, []);
     }
 
     return response;
@@ -90,10 +117,14 @@ export const handleConsignLicenses = async ({
     url,
     image,
     description,
+    id,
 }: PayloadConsign) => {
     const fileName = join(ASSET_TEMP_DIR, license);
     try {
-        await checkExistsFile({ name: license, title: 'NFT' });
+        await checkExistsFile({
+            name: license,
+            title: license.replace('.xml', ''),
+        });
 
         // download
         await download({
@@ -118,7 +149,7 @@ export const handleConsignLicenses = async ({
         // add item
         const item = addItemConsign({
             raw: parsedData,
-            item: { creator, title, url, license, image, description },
+            item: { creator, title, url, license, image, description, id },
         });
 
         parsedData.rss.channel.item = item;

@@ -3,7 +3,7 @@ import debug from 'debug';
 import { RABBITMQ_EXCHANGE_RSS } from '../../constants';
 import { sentry, queue } from '../../services';
 
-import { handleCurateStack, handleConsign } from './files';
+import { handleCurateStack, handleConsign, handleRemove } from './actions';
 
 const logger = debug('workers:rss');
 
@@ -36,6 +36,7 @@ export const start = async () => {
     channel.bindQueue(logQueue, RABBITMQ_EXCHANGE_RSS, 'create');
     channel.bindQueue(logQueue, RABBITMQ_EXCHANGE_RSS, 'consign');
     channel.bindQueue(logQueue, RABBITMQ_EXCHANGE_RSS, 'video');
+    channel.bindQueue(logQueue, RABBITMQ_EXCHANGE_RSS, 'remove');
     channel.consume(logQueue, async (data) => {
         if (!data) return;
         try {
@@ -48,6 +49,10 @@ export const start = async () => {
 
             if (data.fields.routingKey === 'consign') {
                 await handleConsign(parsedMessage);
+            }
+
+            if (data.fields.routingKey === 'remove') {
+                await handleRemove(parsedMessage);
             }
 
             channel.ack(data);

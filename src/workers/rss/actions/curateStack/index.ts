@@ -102,20 +102,7 @@ const addItemCurateStack = ({ raw, item }: AddItemCurateStackParams) => {
 
         response.push(newItem);
 
-        response.map((cur) => {
-            if (!cur.description?.__cdata) {
-                return {
-                    ...cur,
-                    description: {
-                        __cdata:
-                            typeof cur.description === 'string'
-                                ? cur.description
-                                : '',
-                    },
-                };
-            }
-            return cur;
-        });
+        return response;
     }
 
     return response;
@@ -155,7 +142,18 @@ export const handleCurateStack = async ({
             item: { assets, sound, title, url },
         });
 
-        parsedData.rss.channel.item = response;
+        if (!Array.isArray(response)) {
+            parsedData.rss.channel.item = response;
+        }
+
+        if (Array.isArray(response)) {
+            parsedData.rss.channel.item = response.map((itemChannel) => ({
+                ...itemChannel,
+                description: {
+                    __cdata: itemChannel.description,
+                },
+            }));
+        }
         logger('added item');
 
         // parse file json to xml

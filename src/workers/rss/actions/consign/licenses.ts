@@ -27,7 +27,7 @@ const renderDescription = ({
     title,
     description,
 }: RenderDescription) => `
-<p>Title: <strong>${title}</strong></p>
+<![CDATA[<p>Title: <strong>${title}</strong></p>
 <p>Creator: <strong>${creator}</strong></p>
 <br />
 <p>${description}</p>
@@ -38,7 +38,7 @@ const renderDescription = ({
             : `<img src="${image}" style="width: 100%;" />`
     }
 </div>
-<a href="${url}" style="width: 100%; text-align: center;">>View on Store</a>
+<a href="${url}" style="width: 100%; text-align: center;">>View on Store</a>]]>
 `;
 
 const addItemConsign = ({ raw, item }: AddItemParams) => {
@@ -153,6 +153,9 @@ export const handleConsignLicenses = async ({
         });
 
         parsedData.rss.channel.item = item;
+        parsedData.rss.channel.title = `VITRUVEO - RSS ${license
+            .replace('.xml', '')
+            .toUpperCase()}`;
         logger('Success add item');
 
         // parse file json to xml

@@ -26,8 +26,8 @@ const renderDescription = ({
     creator,
     title,
     description,
-}: RenderDescription) => `
-<![CDATA[<p>Title: <strong>${title}</strong></p>
+}: RenderDescription) => `<![CDATA[
+<p>Title: <strong>${title}</strong></p>
 <p>Creator: <strong>${creator}</strong></p>
 <br />
 <p>${description}</p>
@@ -38,21 +38,25 @@ const renderDescription = ({
             : `<img src="${image}" style="width: 100%;" />`
     }
 </div>
-<a href="${url}" style="width: 100%; text-align: center;">>View on Store</a>]]>
-`;
+<a href="${url}" style="width: 100%; text-align: center;">>View on Store</a>
+]]>`;
 
 const addItemConsign = ({ raw, item }: AddItemParams) => {
     let response = raw.rss.channel.item;
 
+    const newItem: Item = {
+        title: item.title,
+        link: item.url,
+        description: {
+            __cdata: renderDescription(item),
+        },
+        pubDate: new Date().toISOString(),
+        guid: item.id,
+    };
+
     // check if item not exists
     if (!response) {
-        response = {
-            title: item.title,
-            link: item.url,
-            description: renderDescription(item),
-            pubDate: new Date().toISOString(),
-            guid: item.id,
-        };
+        response = newItem;
 
         return response;
     }
@@ -60,13 +64,7 @@ const addItemConsign = ({ raw, item }: AddItemParams) => {
     // check if item is not array
     if (!Array.isArray(response)) {
         response = [response];
-        response.push({
-            title: item.title,
-            link: item.url,
-            description: renderDescription(item),
-            pubDate: new Date().toISOString(),
-            guid: item.id,
-        });
+        response.push(newItem);
     }
 
     // check if item is array
@@ -78,13 +76,7 @@ const addItemConsign = ({ raw, item }: AddItemParams) => {
             }
         }
 
-        response.push({
-            title: item.title,
-            link: item.url,
-            description: renderDescription(item),
-            pubDate: new Date().toISOString(),
-            guid: item.id,
-        });
+        response.push(newItem);
 
         return response
             .map((cur) => {
@@ -159,7 +151,11 @@ export const handleConsignLicenses = async ({
         logger('Success add item');
 
         // parse file json to xml
-        const builder = new XMLBuilder();
+        const builder = new XMLBuilder({
+            ignoreAttributes: false,
+            cdataPropName: '__cdata',
+            format: true,
+        });
         const xmlContent = builder.build(parsedData);
         logger('parsed data to XML success');
 

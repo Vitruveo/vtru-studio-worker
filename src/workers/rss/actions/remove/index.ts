@@ -71,7 +71,11 @@ export const handleRemove = async ({ id }: PayloadRemove) => {
             logger('Success remove item');
 
             // parse file json to xml
-            const builder = new XMLBuilder();
+            const builder = new XMLBuilder({
+                ignoreAttributes: false,
+                cdataPropName: '__cdata',
+                format: true,
+            });
             const xmlContent = builder.build(parsedData);
             logger('parsed data to XML success');
 

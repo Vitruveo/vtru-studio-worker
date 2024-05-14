@@ -15,7 +15,9 @@ export interface PayloadCurateStack {
 export interface Item {
     title: string;
     link: string;
-    description: string;
+    description: {
+        __cdata: string;
+    };
     pubDate: string;
 }
 

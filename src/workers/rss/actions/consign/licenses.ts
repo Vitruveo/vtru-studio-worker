@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import debug from 'debug';
 import { join } from 'path';
 import fs from 'fs/promises';
@@ -38,7 +39,10 @@ const renderDescription = ({
             : `<img src="${image}" style="width: 100%;" />`
     }
 </div>
-<a href="${url}" style="width: 100%; text-align: center;">>View on Store</a>`;
+<div style="width: 100%; text-align: center;">
+<a href="${url}">View on Store</a>
+</div>
+`;
 
 const addItemConsign = ({ raw, item }: AddItemParams) => {
     let response = raw.rss.channel.item;
@@ -79,15 +83,16 @@ const addItemConsign = ({ raw, item }: AddItemParams) => {
 
         return response
             .map((cur) => {
-                if (!cur.guid) {
-                    const regex = /\/([^/]+)\/([^/]+)\/([^/]+)$/;
-                    const [, , guid] = cur.link.match(regex) || [];
-                    if (guid) {
-                        return {
-                            ...cur,
-                            guid,
-                        };
-                    }
+                if (!cur.description?.__cdata) {
+                    return {
+                        ...cur,
+                        description: {
+                            __cdata:
+                                typeof cur.description === 'string'
+                                    ? cur.description
+                                    : '',
+                        },
+                    };
                 }
                 return cur;
             })

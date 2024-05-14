@@ -26,7 +26,7 @@ const renderDescription = ({
     creator,
     title,
     description,
-}: RenderDescription) => `<![CDATA[
+}: RenderDescription) => `
 <p>Title: <strong>${title}</strong></p>
 <p>Creator: <strong>${creator}</strong></p>
 <br />
@@ -38,8 +38,7 @@ const renderDescription = ({
             : `<img src="${image}" style="width: 100%;" />`
     }
 </div>
-<a href="${url}" style="width: 100%; text-align: center;">>View on Store</a>
-]]>`;
+<a href="${url}" style="width: 100%; text-align: center;">>View on Store</a>`;
 
 const addItemConsign = ({ raw, item }: AddItemParams) => {
     let response = raw.rss.channel.item;

@@ -66,12 +66,23 @@ export const handleRemove = async ({ id }: PayloadRemove) => {
 
             // add item
             const item = removeItem({ raw: parsedData, item: { id } });
-
-            parsedData.rss.channel.item = item;
+            if (!item) delete parsedData.rss.channel.item;
+            if (Array.isArray(item)) {
+                parsedData.rss.channel.item = item.map((itemChannel) => ({
+                    ...itemChannel,
+                    description: {
+                        __cdata: itemChannel.description,
+                    },
+                }));
+            }
             logger('Success remove item');
 
             // parse file json to xml
-            const builder = new XMLBuilder();
+            const builder = new XMLBuilder({
+                ignoreAttributes: false,
+                cdataPropName: '__cdata',
+                format: true,
+            });
             const xmlContent = builder.build(parsedData);
             logger('parsed data to XML success');
 

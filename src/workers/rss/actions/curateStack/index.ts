@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import fs from 'fs/promises';
 import debug from 'debug';
 import { join } from 'path';
@@ -67,14 +68,18 @@ const renderDescription = ({
 const addItemCurateStack = ({ raw, item }: AddItemCurateStackParams) => {
     let response = raw.rss.channel.item;
 
+    const newItem = {
+        title: item.title,
+        link: item.url,
+        description: {
+            __cdata: renderDescription(item),
+        },
+        pubDate: new Date().toISOString(),
+    };
+
     // check if item not exists
     if (!response) {
-        response = {
-            title: item.title,
-            link: item.url,
-            description: renderDescription(item),
-            pubDate: new Date().toISOString(),
-        };
+        response = newItem;
 
         return response;
     }
@@ -82,12 +87,7 @@ const addItemCurateStack = ({ raw, item }: AddItemCurateStackParams) => {
     // check if item is not array
     if (!Array.isArray(response)) {
         response = [response];
-        response.push({
-            title: item.title,
-            link: item.url,
-            description: renderDescription(item),
-            pubDate: new Date().toISOString(),
-        });
+        response.push(newItem);
         return response;
     }
 
@@ -100,12 +100,8 @@ const addItemCurateStack = ({ raw, item }: AddItemCurateStackParams) => {
             }
         }
 
-        response.push({
-            title: item.title,
-            link: item.url,
-            description: renderDescription(item),
-            pubDate: new Date().toISOString(),
-        });
+        response.push(newItem);
+
         return response;
     }
 
@@ -146,11 +142,26 @@ export const handleCurateStack = async ({
             item: { assets, sound, title, url },
         });
 
-        parsedData.rss.channel.item = response;
+        if (!Array.isArray(response)) {
+            parsedData.rss.channel.item = response;
+        }
+
+        if (Array.isArray(response)) {
+            parsedData.rss.channel.item = response.map((itemChannel) => ({
+                ...itemChannel,
+                description: {
+                    __cdata: itemChannel.description,
+                },
+            }));
+        }
         logger('added item');
 
         // parse file json to xml
-        const builder = new XMLBuilder();
+        const builder = new XMLBuilder({
+            ignoreAttributes: false,
+            cdataPropName: '__cdata',
+            format: true,
+        });
         const xmlContent = builder.build(parsedData);
         logger('parsed data to XML success');
 

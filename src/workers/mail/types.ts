@@ -7,6 +7,7 @@ export interface MailEnvelope {
     link: string;
     creator: string;
     title: string;
+    consignMessage: string;
 }
 
 export interface MailProvider {

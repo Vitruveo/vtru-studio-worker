@@ -17,6 +17,7 @@ export class SendGrid implements MailProvider {
                 link: envelope.link,
                 creator: envelope.creator,
                 title: envelope.title,
+                consignMessage: envelope.consignMessage,
             },
         };
 

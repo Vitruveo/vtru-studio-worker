@@ -1,6 +1,10 @@
 import debug from 'debug';
 import { nanoid } from 'nanoid';
-import { RABBITMQ_EXCHANGE_MAIL } from '../../constants';
+import {
+    MAIL_ENABLER,
+    NODE_ENV,
+    RABBITMQ_EXCHANGE_MAIL,
+} from '../../constants';
 import { sentry, queue, logger as remoteLogger } from '../../services';
 import type { MailEnvelope } from './types';
 import { createMailProvider } from './factory';
@@ -82,6 +86,18 @@ export const start = async () => {
             const parsedMessage = JSON.parse(
                 data.content.toString().trim()
             ) as MailEnvelope;
+
+            // disable mail in QA
+            if (
+                NODE_ENV === 'qa' &&
+                !MAIL_ENABLER &&
+                parsedMessage.subject !== 'Login code'
+            ) {
+                logger('Mail disabled in QA');
+                channel.ack(data);
+                return;
+            }
+
             await sendMail(parsedMessage);
             channel.ack(data);
         } catch (parsingError) {

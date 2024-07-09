@@ -1,7 +1,7 @@
 import debug from 'debug';
 import { nanoid } from 'nanoid';
 import {
-    MAIL_ENABLER,
+    MAIL_SEND_ENABLE,
     NODE_ENV,
     RABBITMQ_EXCHANGE_MAIL,
 } from '../../constants';
@@ -90,7 +90,7 @@ export const start = async () => {
             // disable mail in QA
             if (
                 NODE_ENV === 'qa' &&
-                !MAIL_ENABLER &&
+                !MAIL_SEND_ENABLE &&
                 parsedMessage.subject !== 'Login code'
             ) {
                 logger('Mail disabled in QA');

@@ -7,6 +7,8 @@ export interface MailEnvelope {
     link: string;
     creator: string;
     title: string;
+    transactionLink?: string;
+    thumbnail?: string;
     consignMessage: string;
 }
 

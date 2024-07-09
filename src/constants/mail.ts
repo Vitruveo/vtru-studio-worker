@@ -7,6 +7,6 @@ export const MAIL_MAILTRAP_FROM =
 export const MAIL_SENDGRID_API_KEY = process.env.MAIL_SENDGRID_API_KEY || '';
 export const MAIL_SENDGRID_FROM = process.env.MAIL_SENDGRID_FROM || '';
 
-export const MAIL_ENABLER = process.env.MAIL_ENABLER
-    ? process.env.MAIL_ENABLER === 'true'
+export const MAIL_SEND_ENABLE = process.env.MAIL_SEND_ENABLE
+    ? process.env.MAIL_SEND_ENABLE === 'true'
     : false;

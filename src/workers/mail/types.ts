@@ -9,7 +9,6 @@ export interface MailEnvelope {
     title: string;
     transactionLink?: string;
     thumbnail?: string;
-    consignMessage: string;
 }
 
 export interface MailProvider {

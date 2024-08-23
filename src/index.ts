@@ -9,6 +9,7 @@ import { start as expressStart } from './workers/express';
 import { start as mailStart } from './workers/mail';
 import { start as assetStorageStart } from './workers/assetStorage';
 import { start as rssStart } from './workers/rss';
+import { start as videoStart } from './workers/video';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -23,6 +24,7 @@ const workers: Record<string, boolean> = {
     mail: false,
     assetStorage: false,
     rss: false,
+    video: false,
 };
 
 // sample argv: [ '/usr/bin/node', '/home/rodrigo/Projects/vitruveo-studio/core/dist/index.js', 'express', 'mail' ]
@@ -45,6 +47,7 @@ const start = async () => {
     if (workers.all || workers.mail) await mailStart();
     if (workers.all || workers.assetStorage) await assetStorageStart();
     if (workers.all || workers.rss) await rssStart();
+    if (workers.all || workers.video) await videoStart();
 
     logger('Worker started');
 };

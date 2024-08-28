@@ -1,20 +1,8 @@
-import debug from 'debug';
 import { RABBITMQ_EXCHANGE_CREATORS } from '../../constants';
 import { sentry, queue, logger as remoteLogger } from '../../services';
-import {
-    AssetEnvelope,
-    GeneratePreSignedURLParams,
-    SendToExchangeCreatorsParams,
-} from './types';
+import { AssetEnvelope, GeneratePreSignedURLParams } from './types';
 import { createAssetStorageProvider } from './factory';
-
-const logger = debug('workers:asset:storage');
-
-const status: {
-    channel: queue.Channel | null;
-} = {
-    channel: null,
-};
+import { sendToExchangeCreators } from '../../services/creators';
 
 interface MessageParams {
     envelope: AssetEnvelope;
@@ -26,46 +14,6 @@ const message = ({ envelope, result, error }: MessageParams) =>
     `Key: ${envelope.path}, Result: ${result}${
         error ? `, Error: ${error}` : ''
     }`;
-
-// TODO: use a separeted file for this function
-export const sendToExchangeCreators = async ({
-    envelope,
-    routingKey = 'preSignedURL',
-}: SendToExchangeCreatorsParams) => {
-    try {
-        if (!status.channel) {
-            status.channel = await queue.getChannel();
-
-            if (!status.channel) {
-                logger('Channel not available');
-                process.exit(1);
-            }
-            status.channel.on('close', () => {
-                logger('Channel closed');
-                process.exit(1);
-            });
-            status.channel.on('error', (error) => {
-                logger('Error occurred in channel:', error);
-                process.exit(1);
-            });
-
-            status.channel.assertExchange(RABBITMQ_EXCHANGE_CREATORS, 'topic', {
-                durable: true,
-            });
-        }
-
-        if (status.channel) {
-            status.channel.publish(
-                RABBITMQ_EXCHANGE_CREATORS,
-                routingKey,
-                Buffer.from(envelope)
-            );
-        }
-    } catch (error) {
-        logger('Error sending to queue: %O', error);
-        sentry.captureException(error, { tags: { scope: 'sendToQueue' } });
-    }
-};
 
 // TODO: use a separeted file for this function
 export const generatePreSignedURL = async ({
@@ -80,16 +28,16 @@ export const generatePreSignedURL = async ({
         const assetStorageProvider = createAssetStorageProvider();
         const preSignedURL = await assetStorageProvider.createUrl(envelope);
 
-        await sendToExchangeCreators({
-            envelope: JSON.stringify({
+        await sendToExchangeCreators(
+            JSON.stringify({
                 preSignedURL,
                 creatorId,
                 transactionId,
                 path: envelope.path,
                 origin: envelope.origin,
                 method: envelope.method,
-            }),
-        });
+            })
+        );
 
         await loggerProvider.log({
             message: message({

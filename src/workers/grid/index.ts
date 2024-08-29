@@ -24,8 +24,13 @@ const height = 800;
 const gap = 20;
 
 async function fetchImage(url: string) {
-    const response = await axios({ url, responseType: 'arraybuffer' });
-    return loadImage(response.data);
+    try {
+        const response = await axios({ url, responseType: 'arraybuffer' });
+        return loadImage(response.data);
+    } catch (error) {
+        logger('Error fetching image', error);
+        return null;
+    }
 }
 
 // TODO: create dead letter for queue.
@@ -76,10 +81,10 @@ export const start = async () => {
             const images = await Promise.all(assets.map(fetchImage));
             logger('Images loaded');
 
-            images.forEach((image, index) => {
+            images.filter(Boolean).forEach((image, index) => {
                 const x = (index % size) * (tileWidth + gap);
                 const y = Math.floor(index / size) * (tileHeight + gap);
-                ctx.drawImage(image, x, y, tileWidth, tileHeight);
+                ctx.drawImage(image!, x, y, tileWidth, tileHeight);
             });
 
             await new Promise((resolve, reject) => {
@@ -124,12 +129,10 @@ export const start = async () => {
                 }),
                 'userNotification'
             );
-
-            channel.ack(data);
         } catch (error) {
             logger('Error processing message', error);
-
-            channel.nack(data);
+        } finally {
+            channel.ack(data);
         }
     });
 

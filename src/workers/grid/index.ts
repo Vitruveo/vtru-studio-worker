@@ -2,7 +2,7 @@ import debug from 'debug';
 import { nanoid } from 'nanoid';
 import fs, { promises } from 'fs';
 import { dirname, join } from 'path';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { createCanvas, loadImage } from 'canvas';
 
 import {
@@ -24,8 +24,23 @@ const height = 800;
 const gap = 20;
 
 async function fetchImage(url: string) {
-    const response = await axios({ url, responseType: 'arraybuffer' });
-    return loadImage(response.data);
+    try {
+        const response = await axios({ url, responseType: 'arraybuffer' });
+        return loadImage(response.data);
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            logger(
+                'Error fetching image',
+                error.response?.status,
+                error.response?.data
+            );
+        }
+        if (error instanceof Error) {
+            logger('Error fetching image', error.message);
+        }
+        // load a blank image
+        return loadImage(Buffer.alloc(0));
+    }
 }
 
 // TODO: create dead letter for queue.

@@ -15,6 +15,7 @@ import { queue } from '../../services';
 import { GridEnvelope } from './types';
 import { upload } from '../../services/aws';
 import { sendToExchangeCreators } from '../../services/creators';
+import { createBlankImage } from './blankImage';
 
 const logger = debug('workers:grid');
 
@@ -39,7 +40,7 @@ async function fetchImage(url: string) {
             logger('Error fetching image', error.message);
         }
         // load a blank image
-        return loadImage(Buffer.alloc(0));
+        return loadImage(createBlankImage());
     }
 }
 

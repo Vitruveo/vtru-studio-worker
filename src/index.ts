@@ -8,7 +8,7 @@ import { captureException } from './services/sentry';
 import { start as expressStart } from './workers/express';
 import { start as mailStart } from './workers/mail';
 import { start as assetStorageStart } from './workers/assetStorage';
-import { start as rssStart } from './workers/rss';
+// import { start as rssStart } from './workers/rss';
 import { start as videoStart } from './workers/video';
 import { start as gridStart } from './workers/grid';
 
@@ -24,7 +24,7 @@ const workers: Record<string, boolean> = {
     express: false,
     mail: false,
     assetStorage: false,
-    rss: false,
+    // rss: false,
     video: false,
     grid: false,
 };
@@ -48,7 +48,7 @@ const start = async () => {
     if (workers.all || workers.express) await expressStart();
     if (workers.all || workers.mail) await mailStart();
     if (workers.all || workers.assetStorage) await assetStorageStart();
-    if (workers.all || workers.rss) await rssStart();
+    // if (workers.all || workers.rss) await rssStart();
     if (workers.all || workers.video) await videoStart();
     if (workers.all || workers.grid) await gridStart();
 

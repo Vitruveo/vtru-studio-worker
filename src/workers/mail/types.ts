@@ -10,6 +10,8 @@ export interface MailEnvelope {
     transactionLink?: string;
     thumbnail?: string;
     consignMessage: string;
+    vaultExplorer?: string;
+    mintExplorer?: string;
 }
 
 export interface MailProvider {

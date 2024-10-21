@@ -20,6 +20,8 @@ export class SendGrid implements MailProvider {
                 consignMessage: envelope.consignMessage,
                 transactionLink: envelope.transactionLink || '',
                 thumbnail: envelope.thumbnail || '',
+                vaultExplorer: envelope.vaultExplorer || '',
+                mintExplorer: envelope.mintExplorer || '',
             },
         };
 

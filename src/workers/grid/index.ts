@@ -4,7 +4,7 @@ import fs, { promises } from 'fs';
 import { dirname, join } from 'path';
 import axios, { AxiosError } from 'axios';
 import { createCanvas, loadImage } from 'canvas';
-import sharp from 'sharp';
+import { Jimp } from 'jimp';
 
 import {
     ASSET_TEMP_DIR,
@@ -29,7 +29,8 @@ async function fetchImage(url: string) {
     try {
         const response = await axios({ url, responseType: 'arraybuffer' });
 
-        const buffer = await sharp(response.data).png().toBuffer();
+        const image = await Jimp.read(response.data);
+        const buffer = await image.getBuffer('image/png');
 
         return loadImage(buffer);
     } catch (error) {

@@ -1,6 +1,6 @@
 {
     "name": "vtru-studio-worker",
-    "version": "1.0.87",
+    "version": "1.0.88",
     "description": "",
     "main": "index.js",
     "scripts": {
@@ -60,9 +60,9 @@
         "draft-js": "^0.11.7",
         "draftjs-to-html": "^0.9.1",
         "fast-xml-parser": "^4.3.6",
+        "jimp": "^1.6.0",
         "nanoid": "^3.3.4",
-        "nodemailer": "^6.9.7",
-        "sharp": "^0.33.5"
+        "nodemailer": "^6.9.7"
     },
     "nodemonConfig": {
         "watch": [

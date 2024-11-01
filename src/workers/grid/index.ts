@@ -4,6 +4,7 @@ import fs, { promises } from 'fs';
 import { dirname, join } from 'path';
 import axios, { AxiosError } from 'axios';
 import { createCanvas, loadImage } from 'canvas';
+import { Jimp } from 'jimp';
 
 import {
     ASSET_TEMP_DIR,
@@ -27,7 +28,11 @@ const gap = 20;
 async function fetchImage(url: string) {
     try {
         const response = await axios({ url, responseType: 'arraybuffer' });
-        return loadImage(response.data);
+
+        const image = await Jimp.read(response.data);
+        const buffer = await image.getBuffer('image/png');
+
+        return loadImage(buffer);
     } catch (error) {
         if (error instanceof AxiosError) {
             logger(

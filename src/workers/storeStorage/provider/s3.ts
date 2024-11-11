@@ -28,6 +28,13 @@ export class S3 implements StoreStorageProvider {
             region: AWS_DEFAULT_REGION,
         });
 
+        console.log({
+            Bucket: STORE_STORAGE_NAME,
+            Key: params.path,
+            Metadata: params.metadata,
+        });
+        
+
         const bucket = {
             Bucket: STORE_STORAGE_NAME,
             Key: params.path,

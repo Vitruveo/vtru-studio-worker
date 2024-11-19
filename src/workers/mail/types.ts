@@ -13,6 +13,8 @@ export interface MailEnvelope {
     vaultExplorer?: string;
     mintExplorer?: string;
     username?: string;
+    wallet?: string;
+    currentDate?: string;
 }
 
 export interface MailProvider {

@@ -12,6 +12,7 @@ export interface MailEnvelope {
     consignMessage: string;
     vaultExplorer?: string;
     mintExplorer?: string;
+    username?: string;
 }
 
 export interface MailProvider {

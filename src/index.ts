@@ -11,6 +11,7 @@ import { start as assetStorageStart } from './workers/assetStorage';
 // import { start as rssStart } from './workers/rss';
 import { start as videoStart } from './workers/video';
 import { start as gridStart } from './workers/grid';
+import { start as storeStorage } from './workers/storeStorage';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -24,6 +25,7 @@ const workers: Record<string, boolean> = {
     express: false,
     mail: false,
     assetStorage: false,
+    storeStorage: false,
     // rss: false,
     video: false,
     grid: false,
@@ -48,6 +50,7 @@ const start = async () => {
     if (workers.all || workers.express) await expressStart();
     if (workers.all || workers.mail) await mailStart();
     if (workers.all || workers.assetStorage) await assetStorageStart();
+    if (workers.all || workers.storeStorage) await storeStorage();
     // if (workers.all || workers.rss) await rssStart();
     if (workers.all || workers.video) await videoStart();
     if (workers.all || workers.grid) await gridStart();

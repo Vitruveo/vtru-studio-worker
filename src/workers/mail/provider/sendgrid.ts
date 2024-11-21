@@ -22,6 +22,9 @@ export class SendGrid implements MailProvider {
                 thumbnail: envelope.thumbnail || '',
                 vaultExplorer: envelope.vaultExplorer || '',
                 mintExplorer: envelope.mintExplorer || '',
+                username: envelope.username || '',
+                wallet: envelope.wallet || '',
+                currentDate: envelope.currentDate || '',
             },
         };
 

@@ -31,4 +31,8 @@ export class MailTrap implements MailProvider {
 
         return info.messageId;
     }
+
+    async sendMailWithoutTemplate(): Promise<string> {
+        return 'not implemented yet';
+    }
 }

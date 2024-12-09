@@ -17,10 +17,17 @@ export interface MailEnvelope {
     currentDate?: string;
 }
 
+export interface MailEnvelopeWithoutTemplate {
+    to: string;
+    subject: string;
+    html: string;
+}
+
 export interface MailProvider {
     /**
      * @param mail MailToSend
      * @returns string id of the mail sent
      */
     sendMail(mail: MailEnvelope): Promise<string>;
+    sendMailWithoutTemplate(mail: MailEnvelopeWithoutTemplate): Promise<string>;
 }

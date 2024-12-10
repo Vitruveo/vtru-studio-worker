@@ -1,5 +1,9 @@
 import sgMail, { MailDataRequired } from '@sendgrid/mail';
-import { MailProvider, MailEnvelope } from '../types';
+import {
+    MailProvider,
+    MailEnvelope,
+    MailEnvelopeWithoutTemplate,
+} from '../types';
 import { MAIL_SENDGRID_API_KEY, MAIL_SENDGRID_FROM } from '../../../constants';
 
 export class SendGrid implements MailProvider {
@@ -26,6 +30,21 @@ export class SendGrid implements MailProvider {
                 wallet: envelope.wallet || '',
                 currentDate: envelope.currentDate || '',
             },
+        };
+
+        const [response] = await sgMail.send(msg);
+
+        return response.statusCode.toString();
+    }
+
+    async sendMailWithoutTemplate(
+        mail: MailEnvelopeWithoutTemplate
+    ): Promise<string> {
+        const msg: MailDataRequired = {
+            from: MAIL_SENDGRID_FROM,
+            to: mail.to,
+            subject: mail.subject,
+            html: mail.html,
         };
 
         const [response] = await sgMail.send(msg);

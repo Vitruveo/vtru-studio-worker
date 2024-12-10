@@ -1,12 +1,8 @@
 import debug from 'debug';
 import { nanoid } from 'nanoid';
-import {
-    // MAIL_SEND_ENABLE,
-    // NODE_ENV,
-    RABBITMQ_EXCHANGE_MAIL,
-} from '../../constants';
+import { RABBITMQ_EXCHANGE_MAIL } from '../../constants';
 import { sentry, queue, logger as remoteLogger } from '../../services';
-import type { MailEnvelope } from './types';
+import type { MailEnvelope, MailEnvelopeWithoutTemplate } from './types';
 import { createMailProvider } from './factory';
 
 const logger = debug('workers:mail');
@@ -14,7 +10,7 @@ const logger = debug('workers:mail');
 const uniqueId = nanoid();
 
 interface MessageParams {
-    envelope: MailEnvelope;
+    envelope: MailEnvelope | MailEnvelopeWithoutTemplate;
     result: string;
     error?: Error;
 }
@@ -30,6 +26,37 @@ export const sendMail = async (envelope: MailEnvelope): Promise<boolean> => {
     await loggerProvider.prepare({ namespace: 'mail' });
     try {
         await mailProvider.sendMail(envelope);
+        await loggerProvider.log({
+            message: message({
+                envelope,
+                result: 'success',
+            }),
+            logLevel: 'info',
+        });
+        return true;
+    } catch (mailError) {
+        // avoid to duplicate error in sentry
+        sentry.captureException(mailError);
+        await loggerProvider.log({
+            message: message({
+                envelope,
+                result: 'failed',
+                error: mailError as Error,
+            }),
+            logLevel: 'error',
+        });
+    }
+    return false;
+};
+
+export const sendMailWithoutTemplate = async (
+    envelope: MailEnvelopeWithoutTemplate
+): Promise<boolean> => {
+    const mailProvider = createMailProvider();
+    const loggerProvider = remoteLogger.createLogger();
+    await loggerProvider.prepare({ namespace: 'mail' });
+    try {
+        await mailProvider.sendMailWithoutTemplate(envelope);
         await loggerProvider.log({
             message: message({
                 envelope,
@@ -79,24 +106,27 @@ export const start = async () => {
     });
     channel.assertQueue(logQueue, { durable: false });
     channel.bindQueue(logQueue, RABBITMQ_EXCHANGE_MAIL, 'toSend');
+    channel.bindQueue(
+        logQueue,
+        RABBITMQ_EXCHANGE_MAIL,
+        'toSendWithoutTemplate'
+    );
     channel.consume(logQueue, async (data) => {
         if (!data) return;
         try {
+            if (data.fields.routingKey === 'toSendWithoutTemplate') {
+                const parsedMessage = JSON.parse(
+                    data.content.toString().trim()
+                ) as MailEnvelopeWithoutTemplate;
+                await sendMailWithoutTemplate(parsedMessage);
+                channel.ack(data);
+                return;
+            }
+
             // parse envelope
             const parsedMessage = JSON.parse(
                 data.content.toString().trim()
             ) as MailEnvelope;
-
-            // disable mail in QA
-            // if (
-            //     NODE_ENV === 'qa' &&
-            //     !MAIL_SEND_ENABLE &&
-            //     parsedMessage.subject !== 'Login code'
-            // ) {
-            //     logger('Mail disabled in QA');
-            //     channel.ack(data);
-            //     return;
-            // }
 
             await sendMail(parsedMessage);
             channel.ack(data);

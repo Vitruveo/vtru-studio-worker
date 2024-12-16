@@ -12,3 +12,5 @@ export const RABBITMQ_EXCHANGE_GRID =
 export const RABBITMQ_EXCHANGE_CREATORS =
     process.env.RABBITMQ_EXCHANGE_CREATORS || 'creators';
 export const RABBITMQ_EXCHANGE_RSS = process.env.RABBITMQ_EXCHANGE_RSS || 'rss';
+export const RABBITMQ_EXCHANGE_ARTCARDS_TEMPLATES =
+    process.env.RABBITMQ_EXCHANGE_ARTCARDS_TEMPLATES || 'artcards_templates';

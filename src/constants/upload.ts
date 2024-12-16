@@ -17,4 +17,4 @@ export const STORE_STORAGE_URL = process.env.STORE_STORAGE_URL || '';
 export const STORE_STORAGE_NAME = process.env.STORE_STORAGE_NAME || '';
 
 export const ARTCARDS_TEMPLATE_STORAGE_NAME =
-    process.env.ARTCARDS_TEMPLATE_STORAGE_NAME || '';
+    process.env.ARTCARDS_TEMPLATE_STORAGE_NAME || 'vitruveo-artcards-templates';

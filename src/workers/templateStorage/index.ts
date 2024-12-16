@@ -89,11 +89,9 @@ export const generateJSON = async ({
             ...envelope.values,
         });
 
-        console.log('jsonContent', jsonContent);
-
-        // await templateStorageProvider.uploadData(
-        //     JSON.stringify(jsonContent, null, 2)
-        // );
+        await templateStorageProvider.uploadData(
+            JSON.stringify(jsonContent, null, 2)
+        );
 
         await loggerProvider.log({
             message: message({

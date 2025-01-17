@@ -41,7 +41,7 @@ if (process.argv.length === 2) {
         workers[arg] = true;
     });
 }
-// #endregion arguments.
+// #endregion arguments..
 
 const start = async () => {
     logger('Worker starting');

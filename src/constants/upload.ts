@@ -16,9 +16,9 @@ export const GENERAL_STORAGE_URL = process.env.GENERAL_STORAGE_URL || '';
 // export const STORE_STORAGE_URL = process.env.STORE_STORAGE_URL || '';
 // export const STORE_STORAGE_NAME = process.env.STORE_STORAGE_NAME || '';
 
-export const STORE_STORAGE_URL = 'vitruveo-studio-qa-stores';
-export const STORE_STORAGE_NAME =
+export const STORE_STORAGE_URL =
     'https://vitruveo-studio-qa-stores.s3.amazonaws.com';
+export const STORE_STORAGE_NAME = 'vitruveo-studio-qa-stores';
 
 export const ARTCARDS_TEMPLATE_STORAGE_NAME =
     process.env.ARTCARDS_TEMPLATE_STORAGE_NAME || 'vitruveo-artcards-templates';

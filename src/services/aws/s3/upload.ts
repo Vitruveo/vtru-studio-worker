@@ -34,6 +34,7 @@ export const uploadBuffer = async ({
 
     await s3.send(
         new PutObjectCommand({
+            ContentType: 'image/jpeg',
             Bucket: bucket,
             Key: key,
             Body: buffer,

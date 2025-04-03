@@ -30,7 +30,3 @@ export const PRINT_OUTPUTS_STORAGE_URL =
 export const PRINT_OUTPUTS_STORAGE_NAME =
     process.env.PRINT_OUTPUTS_STORAGE_NAME ||
     'vitruveo-studio-qa-print-outputs';
-
-export const PRINT_TEMPLATES_STORAGE_NAME =
-    process.env.PRINT_TEMPLATES_STORAGE_NAME ||
-    'vitruveo-studio-qa-print-templates';

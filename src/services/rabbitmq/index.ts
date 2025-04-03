@@ -18,7 +18,8 @@ export const getChannel = async () => {
             process.exit(1);
         }
 
-        return status.connection.createChannel();
+        const channel = await status.connection.createChannel();
+        return channel;
     } catch (error) {
         logger('Error creating channel: %O', error);
         captureException(error, { tags: { scope: 'rabbitmq' } });

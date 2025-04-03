@@ -15,6 +15,12 @@ export interface UploadOptions {
     bucket: string;
 }
 
+export interface UploadBufferOptions {
+    buffer: Buffer;
+    key: string;
+    bucket: string;
+}
+
 export interface RemoveOptions {
     key: string;
     bucket: string;

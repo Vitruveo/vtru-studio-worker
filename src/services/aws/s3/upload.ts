@@ -29,7 +29,10 @@ export const uploadBuffer = async ({
     bucket,
 }: UploadBufferOptions) => {
     const s3 = new S3Client({
-        region: 'us-west-2',
+        region:
+            process.env.NODE_ENV === 'production'
+                ? AWS_DEFAULT_REGION
+                : 'us-west-2',
     });
 
     await s3.send(

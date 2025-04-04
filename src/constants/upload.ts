@@ -22,3 +22,11 @@ export const STORE_STORAGE_NAME =
 
 export const ARTCARDS_TEMPLATE_STORAGE_NAME =
     process.env.ARTCARDS_TEMPLATE_STORAGE_NAME || 'vitruveo-artcards-templates';
+
+export const PRINT_OUTPUTS_STORAGE_URL =
+    process.env.PRINT_OUTPUTS_STORAGE_URL ||
+    'https://vitruveo-studio-dev-print-outputs.s3.amazonaws.com';
+
+export const PRINT_OUTPUTS_STORAGE_NAME =
+    process.env.PRINT_OUTPUTS_STORAGE_NAME ||
+    'vitruveo-studio-qa-print-outputs';

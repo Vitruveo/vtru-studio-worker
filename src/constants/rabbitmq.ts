@@ -14,3 +14,5 @@ export const RABBITMQ_EXCHANGE_CREATORS =
 export const RABBITMQ_EXCHANGE_RSS = process.env.RABBITMQ_EXCHANGE_RSS || 'rss';
 export const RABBITMQ_EXCHANGE_ARTCARDS_TEMPLATES =
     process.env.RABBITMQ_EXCHANGE_ARTCARDS_TEMPLATES || 'artcardsTemplates';
+export const RABBITMQ_EXCHANGE_PRINT_OUTPUTS =
+    process.env.RABBITMQ_EXCHANGE_PRINT_OUTPUTS || 'printOutputs';

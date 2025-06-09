@@ -12,6 +12,8 @@ import { start as assetStorageStart } from './workers/assetStorage';
 import { start as videoStart } from './workers/video';
 import { start as gridStart } from './workers/grid';
 import { start as storeStorage } from './workers/storeStorage';
+import { start as templateStorage } from './workers/templateStorage';
+import { start as printOutputs } from './workers/printOutputs';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -26,9 +28,10 @@ const workers: Record<string, boolean> = {
     mail: false,
     assetStorage: false,
     storeStorage: false,
-    // rss: false,
+    templateStorage: false,
     video: false,
     grid: false,
+    printGenerator: false
 };
 
 // sample argv: [ '/usr/bin/node', '/home/rodrigo/Projects/vitruveo-studio/core/dist/index.js', 'express', 'mail' ]
@@ -40,7 +43,7 @@ if (process.argv.length === 2) {
         workers[arg] = true;
     });
 }
-// #endregion arguments.
+// #endregion arguments..
 
 const start = async () => {
     logger('Worker starting');
@@ -51,9 +54,10 @@ const start = async () => {
     if (workers.all || workers.mail) await mailStart();
     if (workers.all || workers.assetStorage) await assetStorageStart();
     if (workers.all || workers.storeStorage) await storeStorage();
-    // if (workers.all || workers.rss) await rssStart();
+    if (workers.all || workers.templateStorage) await templateStorage();
     if (workers.all || workers.video) await videoStart();
     if (workers.all || workers.grid) await gridStart();
+    if (workers.all || workers.printGenerator) await printOutputs();
 
     logger('Worker started');
 };

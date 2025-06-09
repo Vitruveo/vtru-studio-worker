@@ -1,6 +1,6 @@
 {
     "name": "vtru-studio-worker",
-    "version": "1.0.94",
+    "version": "1.0.106",
     "description": "",
     "main": "index.js",
     "scripts": {

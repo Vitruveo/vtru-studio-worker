@@ -1,2 +1,1 @@
-export const BASE_URL_VITRUVEO =
-    process.env.BASE_URL_VITRUVEO || 'https://vitruveo.xyz/';
+export const VITRUVEO_URL = process.env.VITRUVEO_URL || 'https://vitruveo.xyz/';

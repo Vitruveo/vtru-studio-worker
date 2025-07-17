@@ -4,7 +4,7 @@ import { join } from 'path';
 
 import {
     ASSET_TEMP_DIR,
-    BASE_URL_VITRUVEO,
+    VITRUVEO_URL,
     GENERAL_STORAGE_NAME,
 } from '../../../../constants';
 import { exists, upload } from '../../../../services/aws';
@@ -16,7 +16,7 @@ const data = ({ title }: { title: string }) => `
 <rss>
 <channel>
     <title>VITRUVEO - RSS ${title}</title>
-    <link>${BASE_URL_VITRUVEO}</link>
+    <link>${VITRUVEO_URL}</link>
     <description>VITRUVEO is a platform for creators to share their work with the world.</description>
     <language>en</language>
 </channel>

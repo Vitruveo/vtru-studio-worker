@@ -2,7 +2,11 @@ import debug from 'debug';
 import fs from 'fs/promises';
 import { join } from 'path';
 
-import { ASSET_TEMP_DIR, GENERAL_STORAGE_NAME } from '../../../../constants';
+import {
+    ASSET_TEMP_DIR,
+    BASE_URL_VITRUVEO,
+    GENERAL_STORAGE_NAME,
+} from '../../../../constants';
 import { exists, upload } from '../../../../services/aws';
 import { CheckExistsFileParams } from './types';
 
@@ -12,7 +16,7 @@ const data = ({ title }: { title: string }) => `
 <rss>
 <channel>
     <title>VITRUVEO - RSS ${title}</title>
-    <link>https://vitruveo.xyz/</link>
+    <link>${BASE_URL_VITRUVEO}</link>
     <description>VITRUVEO is a platform for creators to share their work with the world.</description>
     <language>en</language>
 </channel>

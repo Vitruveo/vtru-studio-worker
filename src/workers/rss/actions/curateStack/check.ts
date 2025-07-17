@@ -6,6 +6,7 @@ import {
     ASSET_TEMP_DIR,
     GENERAL_STORAGE_NAME,
     RSS_CURATE_STACK,
+    VITRUVEO_URL,
 } from '../../../../constants';
 import { exists, upload } from '../../../../services/aws';
 
@@ -15,7 +16,7 @@ const data = `
 <rss>
 <channel>
     <title>VITRUVEO - RSS CURATE STACK</title>
-    <link>https://vitruveo.xyz/</link>
+    <link>${VITRUVEO_URL}</link>
     <description>VITRUVEO is a platform for creators to share their work with the world.</description>
     <language>en</language>
 </channel>

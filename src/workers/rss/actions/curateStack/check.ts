@@ -6,17 +6,17 @@ import {
     ASSET_TEMP_DIR,
     GENERAL_STORAGE_NAME,
     RSS_CURATE_STACK,
-    VITRUVEO_URL,
+    REDIRECTS_JSON,
 } from '../../../../constants';
 import { exists, upload } from '../../../../services/aws';
 
 const logger = debug('workers:rss:checkExistsFile');
 
-const data = `
+const data = (url: string) => `
 <rss>
 <channel>
     <title>VITRUVEO - RSS CURATE STACK</title>
-    <link>${VITRUVEO_URL}</link>
+    <link>${url}</link>
     <description>VITRUVEO is a platform for creators to share their work with the world.</description>
     <language>en</language>
 </channel>
@@ -31,12 +31,16 @@ export const checkExistsFile = async () => {
             key: RSS_CURATE_STACK,
             bucket: GENERAL_STORAGE_NAME,
         });
+        const redirectsRaw = await fetch(REDIRECTS_JSON);
+        const redirects = await redirectsRaw.json();
+        const url = redirects.common.vitruveo.base_url;
+        logger('vitruveo base url: ', url);
         logger('hasFile', hasFile);
 
         if (!hasFile) {
             // create file
             await fs.mkdir(ASSET_TEMP_DIR, { recursive: true });
-            await fs.writeFile(fileName, data);
+            await fs.writeFile(fileName, data(url));
             logger('File created');
 
             // upload file

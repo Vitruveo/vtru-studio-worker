@@ -4,19 +4,19 @@ import { join } from 'path';
 
 import {
     ASSET_TEMP_DIR,
-    VITRUVEO_URL,
     GENERAL_STORAGE_NAME,
+    REDIRECTS_JSON,
 } from '../../../../constants';
 import { exists, upload } from '../../../../services/aws';
 import { CheckExistsFileParams } from './types';
 
 const logger = debug('workers:rss:consign:checkExistsFile');
 
-const data = ({ title }: { title: string }) => `
+const data = ({ title, url }: { title: string; url: string }) => `
 <rss>
 <channel>
     <title>VITRUVEO - RSS ${title}</title>
-    <link>${VITRUVEO_URL}</link>
+    <link>${url}</link>
     <description>VITRUVEO is a platform for creators to share their work with the world.</description>
     <language>en</language>
 </channel>
@@ -34,12 +34,16 @@ export const checkExistsFile = async ({
             key: name,
             bucket: GENERAL_STORAGE_NAME,
         });
+        const redirectsRaw = await fetch(REDIRECTS_JSON);
+        const redirects = await redirectsRaw.json();
+        const url = redirects.common.vitruveo.base_url;
+        logger('vitruveo base url: ', url);
         logger(`has file ${name}: `, hasFile);
 
         if (!hasFile) {
             // create file
             await fs.mkdir(ASSET_TEMP_DIR, { recursive: true });
-            await fs.writeFile(fileName, data({ title }));
+            await fs.writeFile(fileName, data({ title, url }));
             logger(`File created ${name}`);
 
             // upload file
